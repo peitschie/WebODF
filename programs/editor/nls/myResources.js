@@ -77,7 +77,9 @@ define({
         size: "Size",
         color: "Color",
         text: "Text",
-        background: "Background"
+        background: "Background",
+        // Tables
+        insertTable: "Insert table"
     },
 
     de: true,

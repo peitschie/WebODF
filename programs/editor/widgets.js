@@ -36,8 +36,9 @@ define("webodf/editor/widgets", [
     "webodf/editor/widgets/simpleStyles",
     "webodf/editor/widgets/toolbarWidgets/currentStyle",
     "webodf/editor/widgets/paragraphStylesDialog",
-    "webodf/editor/widgets/zoomSlider"],
-    function (SimpleStyles, CurrentStyle, ParagraphStylesDialog, ZoomSlider) {
+    "webodf/editor/widgets/zoomSlider",
+    "webodf/editor/widgets/tableOperations"],
+    function (SimpleStyles, CurrentStyle, ParagraphStylesDialog, ZoomSlider, TableOperations) {
         "use strict";
 
         return function loadWidgets(editorSession, saveOdtFile) {
@@ -53,7 +54,8 @@ define("webodf/editor/widgets", [
                 "dijit/Toolbar"
             ], function (ready, MenuItem, DropDownMenu, Button, DropDownButton, Toolbar) {
                 ready(function () {
-                    var saveButton, dropDownMenu, menuButton, paragraphStylesMenuItem, dialog, toolbar, simpleStyles, currentStyle, zoomSlider;
+                    var saveButton, dropDownMenu, menuButton, paragraphStylesMenuItem, dialog, toolbar, simpleStyles, currentStyle, zoomSlider,
+                        tableOperations;
 
                     dropDownMenu = new DropDownMenu({});
                     paragraphStylesMenuItem = new MenuItem({
@@ -98,6 +100,12 @@ define("webodf/editor/widgets", [
                         }
                     });
                     menuButton.placeAt(toolbar);
+
+                    // Table Operations
+                    tableOperations = new TableOperations(editorSession, function(widget) {
+                        widget.placeAt(toolbar);
+                        widget.startup();
+                    });
 
                     if (saveOdtFile) {
                         saveButton = new Button({

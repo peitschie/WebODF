@@ -274,6 +274,17 @@ define("webodf/editor/EditorSession", [
             return currentNamedStyleName;
         };
 
+        /**
+         * @param {!String} styleName
+         * @param {!String} family
+         * @return {?Node}
+         */
+        this.getStyleElement = function(styleName, family) {
+            var node;
+            node = formatting.getStyleElement(odtDocument.getOdfCanvas().odfContainer().rootElement.styles, styleName, family);
+            return node;
+        };
+
         this.setCurrentParagraphStyle = function (value) {
             var op;
             if (currentNamedStyleName !== value) {
