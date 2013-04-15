@@ -92,13 +92,17 @@ define("webodf/editor/widgets/paragraphStyles",
                 
                 editorSession.subscribe(EditorSession.signalStyleCreated, function (newStyleName) {
                     var newStyleElement = editorSession.getParagraphStyleElement(newStyleName);
-                    select.addOption({
-                        value: newStyleName,
-                        label: newStyleElement.getAttributeNS(stylens, 'display-name')
-                    });
-                    
-                    if (self.onAdd) {
-                        self.onAdd(newStyleName);
+
+                    if (newStyleElement) {
+                        // Non-paragraph styles can be created
+                        select.addOption({
+                            value: newStyleName,
+                            label: newStyleElement.getAttributeNS(stylens, 'display-name')
+                        });
+
+                        if (self.onAdd) {
+                            self.onAdd(newStyleName);
+                        }
                     }
                 });
 

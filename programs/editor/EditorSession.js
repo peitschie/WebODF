@@ -288,6 +288,16 @@ define("webodf/editor/EditorSession", [
             }
         };
 
+        this.createStyle = function(styleType, info) {
+            var op = new ops.OpAddStyle();
+            op.init({
+                memberid: memberid,
+                styleType: styleType,
+                info: info
+            });
+            session.enqueue(op);
+        };
+
         this.insertTable = function(initialRows, initialColumns, tableStyleName, tableColumnStyleName, tableCellStyleMatrix) {
             var op = new ops.OpInsertTable();
             op.init({

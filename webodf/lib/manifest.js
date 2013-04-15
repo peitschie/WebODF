@@ -81,6 +81,7 @@
         "ops/OdtDocument.js",
         "ops/Session.js",
         "ops/SessionNodeFilter.js",
+        "ops/OpAddStyle.js",
         "ops/OpAddCursor.js",
         "ops/OpRemoveCursor.js",
         "ops/OpMoveCursor.js",
