@@ -271,7 +271,9 @@ odf.OdfUtils = function OdfUtils() {
         var e = /**@type{!Element}*/(n),
             localName = e.localName;
         return containerInfo.isTextContainer(e.namespaceURI, localName)
-               || (localName === "span" && e.className === "webodf-annotationHighlight");
+               || (localName === "span" && Boolean(/**@type{!HTMLElement}*/(e).classList)
+                   && (/**@type{!HTMLElement}*/(e).classList.contains("webodf-annotationHighlight")
+                       || /**@type{!HTMLElement}*/(e).classList.contains("odfVisible")));
     }
     this.isGroupingElement = isGroupingElement;
 
