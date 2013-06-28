@@ -503,6 +503,158 @@
         this.comparePoints = comparePoints;
 
         /**
+         * Returns true if the x,y point is in the rectangle
+         * @param {!number} x
+         * @param {!number} y
+         * @param {!ClientRect} rectangle
+         * @returns {!boolean}
+         */
+        function isPointInRect(x, y, rectangle) {
+            return y >= rectangle.top && y <= rectangle.bottom
+                && x >= rectangle.left && x <= rectangle.right;
+        }
+
+        /**
+         * Returns true if the x,y coordinate is within one of the rectangles
+         * @param {!number} x
+         * @param {!number} y
+         * @param {ClientRectList} rectangles
+         * @returns {!boolean}
+         */
+        function isPointInRectangles(x, y, rectangles) {
+            var filter = isPointInRect.bind(undefined, x, y);
+            return Array.prototype.some.call(rectangles, filter);
+        }
+
+        /**
+         * Returns the smallest rectangle containing the x,y coordinates
+         * @param {!number} x
+         * @param {!number} y
+         * @param {ClientRectList} rectangles
+         * @returns {ClientRect}
+         */
+        function getClosestRect(x, y, rectangles) {
+            var smallestArea = -1,
+                smallestRectangle = null,
+                currentRectangle,
+                currentArea,
+                i;
+
+            for (i = 0; i < rectangles.length; i += 1) {
+                currentRectangle = /**@type {ClientRect}*/(rectangles[i]);
+                currentArea = currentRectangle.height * currentRectangle.width;
+                if(isPointInRect(x, y, currentRectangle)) {
+                    if(smallestArea === -1 || currentArea < smallestArea) {
+                        smallestRectangle = currentRectangle;
+                        smallestArea = currentArea;
+                    }
+                }
+            }
+
+            return smallestRectangle;
+        }
+
+        /**
+         * Returns true if the x position is closer to the left hand side of the rectangle
+         * @param {!number} x
+         * @param {!ClientRect} rectangle
+         * @returns {!boolean}
+         */
+        function isCloserToLeft(x, rectangle) {
+            return x - rectangle.left < rectangle.right - x;
+        }
+
+        /**
+         * Find the smallest child client rectangle that contains the point x, y
+         * @param {!Node|!Text} container
+         * @param {!number} x
+         * @param {!number} y
+         * @returns {?{startOffset: !number,
+         *              endOffset: !number,
+         *              node: !Node,
+         *              closestRectangle: ClientRect,
+         *              closestOffset: !number}}
+         */
+        function fallbackCaretPositionFromPoint(container, x, y) {
+            var range = container.ownerDocument.createRange(),
+                offset = -1,
+                foundMatchingRect,
+                maxOffsets = /**@type{!Text}*/(container).length || container.childNodes.length,
+                result = null;
+
+            do {
+                offset += 1;
+                if (offset === maxOffsets) {
+                    break; // The container does not contain any offsets covering this point
+                }
+                range.setStart(container, offset);
+                range.setEnd(container, offset+1);
+                foundMatchingRect = isPointInRectangles(x, y, range.getClientRects());
+            } while (!foundMatchingRect);
+
+            if(foundMatchingRect) {
+                if (container.childNodes.length) {
+                    // Drill down and iterate over children to find the more fine-grained end
+                    result = fallbackCaretPositionFromPoint(container.childNodes[offset], x, y);
+                }
+                if(!result) {
+                    result = {
+                        startOffset: offset,
+                        endOffset: offset+1,
+                        node: container,
+                        closestRectangle: /**@type {!ClientRect}*/(getClosestRect(x, y, range.getClientRects())),
+                        closestOffset: offset // Will be overwritten straight after
+                    };
+                    result.closestOffset = isCloserToLeft(x, result.closestRectangle) ? result.startOffset : result.endOffset;
+                }
+            }
+            range.detach();
+            return result;
+        }
+
+        /**
+         * Convert the requested x & y coordinates into a DOM position
+         * @param {!Document} doc
+         * @param {!number} x
+         * @param {!number} y
+         * @return {?{container:!Node, offset:!number}}
+         */
+        this.caretPositionFromPoint = function(doc, x, y) {
+            var element,
+                range,
+                point,
+                fallback;
+
+            if (doc.caretRangeFromPoint) {
+                range = doc.caretRangeFromPoint(x, y);
+                return {
+                    container : /**@type{!Node}*/(range.startContainer),
+                    offset : /**@type{!number}*/(range.startOffset)
+                };
+            }
+            if (doc.caretPositionFromPoint) {
+                point = doc.caretPositionFromPoint(x, y);
+                return {
+                    container : /**@type{!Node}*/(point.offsetNode),
+                    offset : point.offset
+                };
+            }
+            if (doc.elementFromPoint) {
+                element = doc.elementFromPoint(x, y);
+                if (element) {
+                    fallback = fallbackCaretPositionFromPoint(/**@type{!Node}*/(element), x, y);
+                    if (fallback) {
+                        return {
+                            container: fallback.node,
+                            offset: fallback.closestOffset
+                        };
+                    }
+                }
+            }
+            return null;
+        };
+
+        /**
          * Scale the supplied number by the specified zoom transformation if the
          * bowser does not transform range client rectangles correctly.
          * In firefox, the span rectangle will be affected by the zoom, but the

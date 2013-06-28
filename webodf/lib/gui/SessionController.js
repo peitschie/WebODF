@@ -156,34 +156,6 @@ gui.SessionController = (function () {
         }
 
         /**
-         * @param {!number} x
-         * @param {!number} y
-         * @return {?{container:!Node, offset:!number}}
-         */
-        function caretPositionFromPoint(x, y) {
-            var doc = odtDocument.getDOM(),
-                c,
-                result = null;
-
-            if (doc.caretRangeFromPoint) {
-                c = doc.caretRangeFromPoint(x, y);
-                result = {
-                    container: c.startContainer,
-                    offset: c.startOffset
-                };
-            } else if (doc.caretPositionFromPoint) {
-                c = doc.caretPositionFromPoint(x, y);
-                if (c && c.offsetNode) {
-                    result = {
-                        container: c.offsetNode,
-                        offset: c.offset
-                    };
-                }
-            }
-            return result;
-        }
-
-        /**
          * Expands the supplied selection to the nearest word boundaries
          * @param {{anchorNode: !Node, anchorOffset: !number, focusNode: !Node, focusOffset: !number}} selection
          */
@@ -309,7 +281,7 @@ gui.SessionController = (function () {
             }
 
             if (!selection.anchorNode && !selection.focusNode) { // chrome & safari
-                caretPos = caretPositionFromPoint(capturedDetails.clientX, capturedDetails.clientY);
+                caretPos = domUtils.caretPositionFromPoint(capturedDetails.clientX, capturedDetails.clientY);
                 if (!caretPos) {
                     return;
                 }

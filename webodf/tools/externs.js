@@ -511,6 +511,13 @@ Document.prototype.createNodeIterator = function (root, whatToShow, filter, enti
 Document.prototype.evaluate = function (xpathExpression, contextNode, namespaceResolver, resultType, result) {"use strict"; };
 
 /**
+ * @param {!number} x
+ * @param {!number} y
+ * @returns {!Range}
+ */
+Document.prototype.caretRangeFromPoint = function(x, y) {"use strict";};
+
+/**
  * http://www.w3.org/TR/DOM-Level-2-Traversal-Range/traversal.html#Traversal-NodeFilter
  * @interface
  */
