@@ -54,6 +54,7 @@ runtime.loadClass("gui.ImageSelector");
 runtime.loadClass("gui.TextManipulator");
 runtime.loadClass("gui.AnnotationController");
 runtime.loadClass("gui.EventManager");
+runtime.loadClass("gui.HtmlPasteboard");
 runtime.loadClass("gui.PlainTextPasteboard");
 
 /**
@@ -104,7 +105,11 @@ gui.SessionController = (function () {
             shadowCursorIterator = gui.SelectionMover.createPositionIterator(odtDocument.getRootNode()),
             drawShadowCursorTask,
             suppressFocusEvent = false,
-            pasteHandler = new gui.PlainTextPasteboard(odtDocument, inputMemberId);
+            pasteHandlers = {
+                "text/html": new gui.HtmlPasteboard(odtDocument, inputMemberId),
+                "text/plain": new gui.PlainTextPasteboard(odtDocument, inputMemberId)
+            },
+            pasteMode = "text/plain";
 
         runtime.assert(window !== null,
             "Expected to be run in an environment which has a global window, like a browser.");
@@ -794,16 +799,24 @@ gui.SessionController = (function () {
          * @return {undefined}
          */
         function handlePaste(e) {
-            var plainText;
+            var plainText, pasteHandler, html;
 
             if (window.clipboardData && window.clipboardData.getData) { // IE
                 plainText = window.clipboardData.getData('Text');
             } else if (e.clipboardData && e.clipboardData.getData) { // the rest
                 plainText = e.clipboardData.getData('text/plain');
+                html = e.clipboardData.getData('text/html');
             }
 
-            if (plainText) {
+            if (html && pasteMode === "text/html") {
+                // Not all browsers or source programs populate the html equivalent of the plain text
                 textManipulator.removeCurrentSelection();
+                pasteHandler = pasteHandlers["text/html"];
+                session.enqueue(pasteHandler.createPasteOps(html));
+                cancelEvent(e);
+            } else if (plainText) {
+                textManipulator.removeCurrentSelection();
+                pasteHandler = pasteHandlers["text/plain"];
                 session.enqueue(pasteHandler.createPasteOps(plainText));
                 cancelEvent(e);
             }
@@ -1053,6 +1066,25 @@ gui.SessionController = (function () {
             eventManager.unsubscribe("contextmenu", handleContextMenu);
             eventManager.unsubscribe("focus", delayedMaintainCursor);
             odtDocument.getOdfCanvas().getElement().classList.remove("virtualSelections");
+        };
+
+        /**
+         * "text/plain" - (Default) Paste plain text with line breaks
+         * "text/html" - (Experimental) Attempt to paste HTML directly if supported by the browser
+         * @param {!string} newMode Expected values are either "text/html", "text/plain"
+         */
+        this.setPasteMode = function(newMode) {
+            if (!pasteHandlers.hasOwnProperty(newMode)) {
+                throw new Error("Unsupported paste mode. Supported paste modes are " + Object.keys(pasteHandlers).join(", "));
+            }
+            pasteMode = newMode;
+        };
+
+        /**
+         * @return {!string}
+         */
+        this.getPasteMode = function() {
+            return pasteMode;
         };
 
         /**

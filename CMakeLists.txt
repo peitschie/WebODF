@@ -301,6 +301,7 @@ set(LIBJSFILES lib/packages.js lib/runtime.js lib/core/Base64.js
     lib/ops/OpSetBlob.js
     lib/ops/OpRemoveBlob.js
     lib/ops/OpInsertImage.js
+    lib/ops/OpInsertFragment.js
     lib/ops/OpInsertTable.js
     lib/ops/OpInsertText.js
     lib/ops/OpRemoveText.js
@@ -322,6 +323,7 @@ set(LIBJSFILES lib/packages.js lib/runtime.js lib/core/Base64.js
     lib/gui/ShadowCursor.js
     lib/gui/Avatar.js
     lib/gui/Caret.js
+    lib/gui/HtmlPasteboard.js
     lib/gui/PlainTextPasteboard.js
     lib/gui/Clipboard.js
     lib/gui/DirectTextStyler.js
