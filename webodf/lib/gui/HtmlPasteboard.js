@@ -185,6 +185,34 @@ gui.HtmlPasteboard = function HtmlPasteboard(odtDocument, inputMemberId) {
     }
 
     /**
+     * Chrome/Safari & FF all put an unclosed '<meta charset="utf-8">' tag at the beginning of the fragment
+     * @param {!string} xml
+     * @returns {!string}
+     */
+    function stripUnclosedMeta(xml) {
+        var searchString = "<meta",
+            closeTag;
+        if (xml.substr(0, searchString.length) === searchString) {
+            // TODO handle ">" appearing in meta content somewhere
+            closeTag = xml.indexOf(">");
+            xml = xml.substring(closeTag + 1, xml.length);
+        }
+        return xml;
+    }
+
+    function sanitizeMSOfficeXml(xml) {
+        // http://stackoverflow.com/questions/1068280/javascript-regex-multiline-flag-doesnt-work
+        // TODO handle ">" appearing in content somewhere
+        // MSOffice doesn't close out any meta or link tags
+        // xml = xml.replace(/<meta([\s\S]*?)\/?>/g, "<meta$1/>");
+        // xml = xml.replace(/<link([\s\S]*?)\/?>/g, "<link$1/>");
+        xml = xml.replace(/<(meta|link)([\s\S]*?)\/?>/g, "");
+        // It also doesn't wrap some attribute values in quotes
+        xml = xml.replace(/=([^"'][^\s/>]+)([\s/>])/g, "=\"$1\"$2");
+        return xml;
+    }
+
+    /**
      * @param {!string} xml
      * @return {{paragraphs: Array.<!Node>}}
      */
@@ -193,7 +221,8 @@ gui.HtmlPasteboard = function HtmlPasteboard(odtDocument, inputMemberId) {
         if (isOdfFragment(xml)) {
             xml = addOdfNamespaces(xml);
         }
-        xml +=  "</meta>";
+        xml = "<document>" + stripUnclosedMeta(xml) + "</document>";
+        xml = sanitizeMSOfficeXml(xml);
         doc = /**@type{!HTMLDocument}*/(runtime.parseXML(xml));
         adoptHtmlNodes(doc);
 
