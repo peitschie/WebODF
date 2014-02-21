@@ -3,6 +3,8 @@ COPY_FILES(BENCHMARK_HTML ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR
     10pages.odt
     100pages.odt
     1000pages.odt
+    KJB-1000pages.odt
+    KJB-2000pages.odt
     index.html
     runner.css
 )
