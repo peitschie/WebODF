@@ -26,6 +26,99 @@
 
 (function () {
     "use strict";
+    var domUtils = core.DomUtils;
+
+    /**
+     * @constructor
+     * @param {!core.PositionIterator} iterator
+     */
+    function DomPoint(iterator) {
+        var /**@type{!{container: !Node, offset: !number, bookmarkAfterRealPoint: !boolean}}*/
+            selfPoint;
+
+        /**
+         * @param {!core.PositionIterator} otherIterator
+         * @return {!boolean}
+         */
+        this.isEqualTo = function(otherIterator) {
+            var otherIsBeforeNode = otherIterator.isBeforeNode();
+            // IMPORTANT the following comparisons are made in the order of least to most expensive
+            return selfPoint.bookmarkAfterRealPoint === otherIsBeforeNode
+                && selfPoint.offset === (otherIsBeforeNode ? 0 : otherIterator.unfilteredDomOffset())
+                && selfPoint.container === (otherIsBeforeNode ? otherIterator.getCurrentNode() : otherIterator.container());
+        };
+
+        /**
+         * @param {!core.PositionIterator} iterator
+         * @return {!{container: !Node, offset: !number, bookmarkAfterRealPoint: !boolean}}
+         */
+        function getPoint(iterator) {
+            if (iterator.isBeforeNode()) {
+                return {
+                    container: iterator.getCurrentNode(),
+                    offset: 0,
+                    bookmarkAfterRealPoint: true
+                };
+            }
+            return {
+                container: iterator.container(),
+                offset: iterator.unfilteredDomOffset(),
+                bookmarkAfterRealPoint: false
+            };
+        }
+
+        /**
+         * @param {!core.PositionIterator} otherIterator
+         * @return {!number}
+         */
+        this.comparePositionTo = function(otherIterator) {
+            var otherPoint = getPoint(otherIterator),
+                compareResult = domUtils.comparePoints(selfPoint.container, selfPoint.offset,
+                    otherPoint.container, otherPoint.offset),
+                finalResult;
+
+            if (selfPoint.bookmarkAfterRealPoint === otherPoint.bookmarkAfterRealPoint) {
+                finalResult = compareResult;
+            } else if (selfPoint.bookmarkAfterRealPoint) {
+                // Note: selfPoint is 1 step after the actual point.
+                if (compareResult === 0) {
+                    // if selfPoint === otherPoint exactly, then selfPoint is just before otherPoint
+                    finalResult = 1;
+                } else if (compareResult === -1 && selfPoint.container.parentNode === otherPoint.container) {
+                    // if otherPoint is just before selfPoint and is the direct parent, then selfPoint is actually
+                    // the identical position, as selfPoint is effectively advanced by one position
+                    finalResult = 0;
+                } else {
+                    finalResult = compareResult;
+                }
+            } else {
+                // Note: otherPoint is 1 step after the actual point.
+                if (compareResult === 0) {
+                    // if selfPoint === otherPoint exactly, then otherPoint is just before selfPoint
+                    finalResult = -1;
+                } else if (compareResult === 1 && otherPoint.container.parentNode === selfPoint.container) {
+                    finalResult = 0;
+                } else {
+                    finalResult = compareResult;
+                }
+            }
+
+            return finalResult;
+        };
+
+
+        selfPoint = getPoint(iterator);
+
+        /**
+         * @type {!Node}
+         */
+        this.container = selfPoint.container;
+
+        /**
+         * @type {!number}
+         */
+        this.offset = selfPoint.offset;
+    }
 
     /**
      *
@@ -40,7 +133,6 @@
             /**@type{!ops.StepsCache}*/
             stepsCache,
             odfUtils = odf.OdfUtils,
-            domUtils = core.DomUtils,
             /**@type{!core.PositionIterator}*/
             iterator,
             /**@const*/
@@ -199,8 +291,8 @@
         this.convertDomPointToSteps = function (node, offset, roundDirection) {
             var stepsFromRoot,
                 beforeRoot,
-                destinationNode,
-                destinationOffset,
+                /**@type{!DomPoint}*/
+                destination,
                 rounding = 0,
                 isStep;
 
@@ -221,17 +313,15 @@
 
             // Get the iterator equivalent position of the current node & offset
             // This ensures the while loop will match the exact container and offset during iteration
-            destinationNode = iterator.container();
-            destinationOffset = iterator.unfilteredDomOffset();
+            destination = new DomPoint(iterator);
 
-            stepsFromRoot = stepsCache.setToClosestDomPoint(destinationNode, destinationOffset, iterator);
-            if (domUtils.comparePoints(iterator.container(), iterator.unfilteredDomOffset(), destinationNode, destinationOffset) < 0) {
+            stepsFromRoot = stepsCache.setToClosestDomPoint(destination.container, destination.offset, iterator);
+            if (destination.comparePositionTo(iterator) > 0) {
                 // Special case: the requested DOM point is between the bookmark node and walkable step it represents
                 return stepsFromRoot > 0 ? stepsFromRoot - 1 : stepsFromRoot;
             }
 
-            while (!(iterator.container() === destinationNode && iterator.unfilteredDomOffset() === destinationOffset)
-                    && iterator.nextPosition()) {
+            while (!(destination.isEqualTo(iterator)) && iterator.nextPosition()) {
                 isStep = filter.acceptPosition(iterator) === FILTER_ACCEPT;
                 if (isStep) {
                     stepsFromRoot += 1;
