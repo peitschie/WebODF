@@ -963,4 +963,25 @@ odf.OdfUtils = function OdfUtils() {
         newRange.detach();
         return links;
     };
+
+    this.getInlineRoots = function (range) {
+        var elements;
+
+        /**
+         * @param {!Node} node
+         * @return {number}
+         */
+        function nodeFilter(node) {
+            var result = NodeFilter.FILTER_SKIP;
+            // TODO reject nested inline roots
+            if (isInlineRoot(node)) {
+                result = NodeFilter.FILTER_ACCEPT;
+            }
+            return result;
+        }
+
+        elements = domUtils.getNodesInRange(range, nodeFilter, NodeFilter.SHOW_ELEMENT);
+        // TODO explain why we're avoiding the inline root the range starts in
+        return elements;
+    }
 };

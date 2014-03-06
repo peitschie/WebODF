@@ -49,21 +49,80 @@
 gui.TextController = function TextController(session, inputMemberId, directStyleOp, paragraphStyleOps) {
     "use strict";
 
-    var odtDocument = session.getOdtDocument();
+    var odtDocument = session.getOdtDocument(),
+        odfUtils = new odf.OdfUtils();
 
     /**
-     * Creates an operation to remove the provided selection
-     * @param {!{position: number, length: number}} selection
-     * @return {!ops.OpRemoveText}
+     * Derive a selection-type object from the provided cursor
+     * @param {!Range} range
+     * @param {!boolean} hasForwardSelection
+     * @return {!{anchorNode: !Node, anchorOffset: !number, focusNode: !Node, focusOffset: !number}}
      */
-    function createOpRemoveSelection(selection) {
-        var op = new ops.OpRemoveText();
+    function rangeToSelection(range, hasForwardSelection) {
+        // TODO move SelectionController's version to somewhere common
+        if (hasForwardSelection) {
+            return {
+                anchorNode: /**@type{!Node}*/(range.startContainer),
+                anchorOffset: range.startOffset,
+                focusNode: /**@type{!Node}*/(range.endContainer),
+                focusOffset: range.endOffset
+            };
+        }
+        return {
+            anchorNode: /**@type{!Node}*/(range.endContainer),
+            anchorOffset: range.endOffset,
+            focusNode: /**@type{!Node}*/(range.startContainer),
+            focusOffset: range.startOffset
+        };
+    }
+
+    function removeRangeOp(range) {
+        var removeSelection = odtDocument.convertDomToCursorRange(rangeToSelection(range, true)),
+            op = new ops.OpRemoveText();
         op.init({
             memberid: inputMemberId,
-            position: selection.position,
-            length: selection.length
+            position: removeSelection.position,
+            length: removeSelection.length
         });
         return op;
+    }
+
+    /**
+     * Creates operations to remove the current selection
+     * @return {!Array.<!ops.OpRemoveText>}
+     */
+    function createOpRemoveSelection() {
+        var cursor = odtDocument.getCursor(inputMemberId),
+            selectedRange = cursor.getSelectedRange(),
+            subTree = selectedRange.commonAncestorContainer,
+            filters = [odtDocument.getPositionFilter(), odtDocument.createRootFilter(subTree)],
+            stepIterator,
+            removalRange = selectedRange.cloneRange(),
+            inlineRoots = odfUtils.getInlineRoots(selectedRange),
+            nextRoot,
+            ops = [];
+
+        stepIterator = odtDocument.createStepIterator(selectedRange.startContainer, selectedRange.startOffset, filters, subTree);
+        nextRoot = inlineRoots.shift();
+        while (nextRoot) {
+            stepIterator.setPosition(nextRoot, 0);
+            stepIterator.previousStep(); // Never want to stay inside the root!
+            removalRange.setEnd(stepIterator.container(), stepIterator.offset());
+
+            // TODO discard nested iline roots
+            ops.push(removeRangeOp(removalRange));
+
+            stepIterator.setPosition(nextRoot, nextRoot.childNodes.length);
+            stepIterator.nextStep(); // Never want to stay inside the root!
+            removalRange.setStart(stepIterator.container(), stepIterator.offset());
+            nextRoot = inlineRoots.shift();
+        }
+
+        removalRange.setEnd(selectedRange.endContainer, selectedRange.endOffset);
+        ops.push(removeRangeOp(removalRange));
+
+        ops.reverse();
+        return ops.filter(function(op) { return op.spec().length !== 0; });
     }
 
     /**
@@ -85,13 +144,9 @@ gui.TextController = function TextController(session, inputMemberId, directStyle
      */
     this.enqueueParagraphSplittingOps = function() {
         var selection = toForwardSelection(odtDocument.getCursorSelection(inputMemberId)),
-            op, operations = [], styleOps;
+            op, operations, styleOps;
 
-        if (selection.length > 0) {
-            op = createOpRemoveSelection(selection);
-            operations.push(op);
-        }
-
+        operations = createOpRemoveSelection();
         op = new ops.OpSplitParagraph();
         op.init({
             memberid: inputMemberId,
@@ -175,8 +230,7 @@ gui.TextController = function TextController(session, inputMemberId, directStyle
                 session.enqueue([op]);
             }
         } else {
-            op = createOpRemoveSelection(selection);
-            session.enqueue([op]);
+            session.enqueue(createOpRemoveSelection());
         }
         return op !== null;
     }
@@ -204,11 +258,9 @@ gui.TextController = function TextController(session, inputMemberId, directStyle
      * @return {!boolean}
      */
     this.removeCurrentSelection = function () {
-        var selection = toForwardSelection(odtDocument.getCursorSelection(inputMemberId)),
-            op;
-        if (selection.length !== 0) {
-            op = createOpRemoveSelection(selection);
-            session.enqueue([op]);
+        var ops = createOpRemoveSelection();
+        if (ops.length !== 0) {
+            session.enqueue(ops);
         }
         return true; // The function is always considered handled, even if nothing is removed
     };
@@ -220,11 +272,10 @@ gui.TextController = function TextController(session, inputMemberId, directStyle
      */
     function insertText(text) {
         var selection = toForwardSelection(odtDocument.getCursorSelection(inputMemberId)),
-            op, stylingOp, operations = [], useCachedStyle = false;
+            op, stylingOp, operations, useCachedStyle = false;
 
-        if (selection.length > 0) {
-            op = createOpRemoveSelection(selection);
-            operations.push(op);
+        operations = createOpRemoveSelection();
+        if (operations.length > 0) {
             useCachedStyle = true;
         }
 
