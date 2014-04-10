@@ -152,16 +152,19 @@
          * @return {undefined}
          */
         function updateCache(steps, iterator, isStep) {
-            var node = iterator.getCurrentNode();
+            var node;
 
-            if (iterator.isBeforeNode() && odfUtils.isParagraph(node)) {
-                if (!isStep) {
-                    // Paragraph bookmarks indicate "first position in the paragraph"
-                    // If the current stable point is before the first walkable position (as often happens)
-                    // simply increase the step number by 1 to move to within the paragraph node
-                    steps += 1;
+            if (iterator.isBeforeNode()) {
+                node = iterator.getCurrentNode();
+                if (odfUtils.isParagraph(node)) {
+                    if (!isStep) {
+                        // Paragraph bookmarks indicate "first position in the paragraph"
+                        // If the current stable point is before the first walkable position (as often happens)
+                        // simply increase the step number by 1 to move to within the paragraph node
+                        steps += 1;
+                    }
+                    stepsCache.updateBookmark(steps, node);
                 }
-                stepsCache.updateBookmark(steps, node);
             }
         }
 
