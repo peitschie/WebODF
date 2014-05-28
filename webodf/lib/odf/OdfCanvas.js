@@ -38,20 +38,22 @@
             queue = [],
             taskRunning = false;
         /**
-         * @param {!Function} task
+         * @param {!Array.<!Function>} task
          * @return {undefined}
          */
-        function run(task) {
+        function run(tasks) {
             taskRunning = true;
             runtime.setTimeout(function () {
-                try {
-                    task();
-                } catch (/**@type{Error}*/e) {
-                    runtime.log(String(e) + "\n" + e.stack);
-                }
+                tasks.forEach(function(task) {
+                    try {
+                        task();
+                    } catch (/**@type{*}*/e) {
+                        runtime.log(String(e) + "\n" + e.stack);
+                    }
+                });
                 taskRunning = false;
                 if (queue.length > 0) {
-                    run(queue.pop());
+                    run(queue.splice(0, 10));
                 }
             }, 10);
         }
@@ -67,7 +69,7 @@
          */
         this.addToQueue = function (loadingTask) {
             if (queue.length === 0 && !taskRunning) {
-                return run(loadingTask);
+                return run([loadingTask]);
             }
             queue.push(loadingTask);
         };
@@ -355,7 +357,7 @@
     }
     /**
      * @param {!Element} image
-     * @return {string}
+     * @return {!string}
      **/
     function getUrlFromBinaryDataElement(image) {
         var node = image.firstChild;
@@ -370,6 +372,24 @@
         }
         return "";
     }
+
+    /**
+     * http://stackoverflow.com/a/15754051/156169
+     * @param {!string} dataURI
+     * @return {Blob}
+     */
+    function dataURItoBlob(dataURI) {
+        var parts = dataURI.split(','),
+            filetype = parts[0].replace(/data\:([^;]+);base64/, "$1"),
+            byteString = atob(parts[1]);
+
+        var ab = new ArrayBuffer(byteString.length);
+        var ia = new Uint8Array(ab);
+        for (var i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+        }
+        return new Blob([ab], { type: filetype });
+    }
     /**
      * @param {string} id
      * @param {!odf.OdfContainer} container
@@ -377,8 +397,9 @@
      * @param {!CSSStyleSheet} stylesheet
      * @return {undefined}
      **/
-    function setImage(id, container, image, stylesheet) {
-        image.setAttributeNS(webodfhelperns, 'styleid', id);
+    function setImage(id, container, image, stylesheet, count) {
+//        image.setAttributeNS(webodfhelperns, 'styleid', id);
+        image.id = id;
         var url = image.getAttributeNS(xlinkns, 'href'),
             /**@type{!odf.OdfPart}*/
             part;
@@ -386,10 +407,28 @@
          * @param {?string} url
          */
         function callback(url) {
-            var rule;
+            var rule,
+                objUrl;
+
             if (url) { // if part cannot be loaded, url is null
-                rule = "background-image: url(" + url + ");";
-                rule = 'draw|image[webodfhelper|styleid="' + id + '"] {' + rule + '}';
+                console.log("Loaded image #" + count);
+                objUrl = URL.createObjectURL(dataURItoBlob(url));
+                rule = "#" + id + " {";
+                rule += "background-image: url(" + objUrl + ");";
+                rule += "}";
+                stylesheet.insertRule(rule, stylesheet.cssRules.length);
+            }
+        }
+        function callbackData(err, uintArr) {
+            var rule,
+                objUrl;
+
+            if (!err && uintArr) { // if part cannot be loaded, url is null
+                console.log("Loaded image #" + count);
+                objUrl = URL.createObjectURL(new Blob([uintArr], { type: "image/png" }));
+                rule = "#" + id + " {";
+                rule += "background-image: url(" + objUrl + ");";
+                rule += "}";
                 stylesheet.insertRule(rule, stylesheet.cssRules.length);
             }
         }
@@ -402,9 +441,9 @@
         // look for a office:binary-data
         if (url) {
             try {
-                part = container.getPart(url);
-                part.onchange = onchange;
-                part.load();
+                console.profile("Load image");
+                container.getPartData(url, callbackData);
+                console.profileEnd("Load image");
             } catch (/**@type{*}*/e) {
                 runtime.log('slight problem: ' + String(e));
             }
@@ -873,17 +912,18 @@
              * @param {!CSSStyleSheet} stylesheet
              * @return {undefined}
              */
-            function loadImage(name, container, node, stylesheet) {
+            function loadImage(name, container, node, stylesheet, count) {
                 // load image with a small delay to give the html ui a chance to
                 // update
                 loadingQueue.addToQueue(function () {
-                    setImage(name, container, node, stylesheet);
+                    setImage(name, container, node, stylesheet, count);
                 });
             }
             images = odffragment.getElementsByTagNameNS(drawns, 'image');
+            console.log("Loading " + images.length + " images");
             for (i = 0; i < images.length; i += 1) {
                 node = /**@type{!Element}*/(images.item(i));
-                loadImage('image' + String(i), container, node, stylesheet);
+                loadImage('image' + String(i), container, node, stylesheet, i);
             }
         }
         /**
