@@ -115,10 +115,9 @@ define("webodf/editor/widgets/editHyperlinks", [
                         selectedLinkRange.selectNode(linksInSelection[0]);
                         selectionController.selectRange(selectedLinkRange, true)
                     }
-                    hyperlinkController.removeHyperlinks();
-                    hyperlinkController.addHyperlink(hyperlinkData.linkUrl);
+                    hyperlinkController.setHyperlinkForSelection(hyperlinkData.linkUrl);
                 } else {
-                    hyperlinkController.addHyperlink(hyperlinkData.linkUrl, hyperlinkData.linkDisplayText);
+                    hyperlinkController.insertHyperlink(hyperlinkData.linkUrl, hyperlinkData.linkDisplayText);
                     linksInSelection = editorSession.getSelectedHyperlinks();
                     selectedLinkRange = selection.cloneRange();
                     selectedLinkRange.selectNode(linksInSelection[0]);
@@ -176,7 +175,7 @@ define("webodf/editor/widgets/editHyperlinks", [
                     disabled: true,
                     iconClass: 'dijitEditorIcon dijitEditorIconUnlink',
                     onClick: function () {
-                        hyperlinkController.removeHyperlinks();
+                        hyperlinkController.removeHyperlinks(gui.HyperlinkController.SELECTED_TEXT_ONLY);
                         self.onToolDone();
                     }
                 });

@@ -45,6 +45,8 @@ gui.HyperlinkController = function HyperlinkController(
         eventNotifier = new core.EventNotifier([
             gui.HyperlinkController.enabledChanged
         ]),
+        /**@const*/
+        SELECTED_TEXT_ONLY = gui.HyperlinkController.SELECTED_TEXT_ONLY,
         isEnabled = false;
 
     /**
@@ -99,57 +101,52 @@ gui.HyperlinkController = function HyperlinkController(
     };
 
     /**
-     * Convert the current selection into a hyperlink
+     * Insert a new hyperlink at the current position. This will *not* replace the current selection.
+     *
+     * TODO: currently doesn't support inserting a new hyperlink within an existing hyperlink
+     *
      * @param {!string} hyperlink Hyperlink to insert
      * @param {!string=} insertionText Optional text to insert as the text content for the hyperlink.
-     *  Note, the insertion text will not replace the existing selection content.
+     *  If unspecified, the hyperlink text will be inserted as the display text.
      */
-    function addHyperlink(hyperlink, insertionText) {
+    function insertHyperlink(hyperlink, insertionText) {
         if (!isEnabled) {
             return;
         }
         var selection = odtDocument.getCursorSelection(inputMemberId),
-            op = new ops.OpApplyHyperlink(),
-            operations = [];
+            insertTextOp = new ops.OpInsertText(),
+            applyHyperlinkOp = new ops.OpApplyHyperlink();
 
-        if (selection.length === 0 || insertionText) {
-            insertionText = insertionText || hyperlink;
-            op = new ops.OpInsertText();
-            op.init({
-                memberid: inputMemberId,
-                position: selection.position,
-                text: insertionText
-            });
-            selection.length = insertionText.length;
-            operations.push(op);
-        }
+        // FIXME currently doesn't cope if the new hyperlink + display text is within an existing hyperlink
+        insertionText = insertionText || hyperlink;
+        insertTextOp.init({
+            memberid: inputMemberId,
+            position: selection.position,
+            text: insertionText
+        });
+        selection.length = insertionText.length;
 
-        op = new ops.OpApplyHyperlink();
-        op.init({
+        applyHyperlinkOp = new ops.OpApplyHyperlink();
+        applyHyperlinkOp.init({
             memberid: inputMemberId,
             position: selection.position,
             length: selection.length,
             hyperlink: hyperlink
         });
-        operations.push(op);
-        session.enqueue(operations);
+        session.enqueue([insertTextOp, applyHyperlinkOp]);
     }
-    this.addHyperlink = addHyperlink;
+    this.insertHyperlink = insertHyperlink;
 
     /**
-     * Remove all hyperlinks within the current selection. If a range of text is selected,
-     * this will only unlink the selection. If the current selection is collapsed within a
-     * link, that entire link will be removed.
+     * Remove hyperlinks within the current selection
+     * @param {!boolean} selectionOnly When true, only remove hyperlinks from selected text. Otherwise,
+     *      completely remove any hyperlinks that intersect with the current selection.
+     * @return {!Array.<!ops.Operation>}
      */
-    function removeHyperlinks() {
-        if (!isEnabled) {
-            return;
-        }
-
+    function createRemoveHyperlinkOps(selectionOnly) {
         var iterator = gui.SelectionMover.createPositionIterator(odtDocument.getRootNode()),
             selectedRange = odtDocument.getCursor(inputMemberId).getSelectedRange(),
             links = odfUtils.getHyperlinkElements(selectedRange),
-            removeEntireLink = selectedRange.collapsed && links.length === 1,
             domRange = odtDocument.getDOMDocument().createRange(),
             operations = [],
             /**@type{{position: !number, length: number}}*/
@@ -157,7 +154,7 @@ gui.HyperlinkController = function HyperlinkController(
             firstLink, lastLink, offset, op;
 
         if (links.length === 0) {
-            return;
+            return operations;
         }
 
         // Remove any links that overlap with the current selection
@@ -178,7 +175,7 @@ gui.HyperlinkController = function HyperlinkController(
             operations.push(op);
         });
 
-        if (!removeEntireLink) {
+        if (selectionOnly === SELECTED_TEXT_ONLY) {
             // Re-add any leading or trailing links that were only partially selected
             firstLink = /**@type{!Element}*/(links[0]);
             if (selectedRange.comparePoint(firstLink, 0) === -1) {
@@ -226,13 +223,53 @@ gui.HyperlinkController = function HyperlinkController(
             }
         }
 
-        session.enqueue(operations);
-        domRange.detach();
+        return operations;
     }
-    this.removeHyperlinks = removeHyperlinks;
 
     /**
-     * @param {!function(!Error=)} callback, passing an error object in case of error
+     * Remove hyperlinks within the current selection, or intersecting the current selection based on
+     * the supplied boolean.
+     *
+     * @param {!boolean} selectionOnly When true, only remove hyperlinks from selected text. Otherwise,
+     *      completely remove any hyperlinks that intersect with the current selection.
+     * @return {undefined}
+     */
+    this.removeHyperlinks = function(selectionOnly) {
+        if (!isEnabled) {
+            return;
+        }
+        session.enqueue(createRemoveHyperlinkOps(selectionOnly));
+    };
+
+    /**
+     * Set (or replace) the hyperlink for the current selection
+     * @param {!string} hyperlink
+     * @return {undefined}
+     */
+    this.setHyperlinkForSelection = function(hyperlink) {
+        if (!isEnabled) {
+            return;
+        }
+        var selection = odtDocument.getCursorSelection(inputMemberId),
+            operations,
+            op;
+
+        runtime.assert(selection.length > 0, "Can't call setHyperlink on a collapsed selection");
+        operations = createRemoveHyperlinkOps(SELECTED_TEXT_ONLY);
+
+        op = new ops.OpApplyHyperlink();
+        op.init({
+            memberid: inputMemberId,
+            position: selection.position,
+            length: selection.length,
+            hyperlink: hyperlink
+        });
+        operations.push(op);
+        session.enqueue(operations);
+    };
+
+    /**
+     * @param {!function(!Error=)} callback passing an error object in case of error
      * @return {undefined}
      */
     this.destroy = function (callback) {
@@ -250,3 +287,17 @@ gui.HyperlinkController = function HyperlinkController(
 };
 
 /**@const*/gui.HyperlinkController.enabledChanged = "enabled/changed";
+
+/**
+ * Remove any hyperlinks that intersect with the current selection.
+ * @const
+ * @type {!boolean}
+ */
+gui.HyperlinkController.INTERSECTING_LINKS = false;
+
+/**
+ * Remove hyperlinks only from text contained within the current selection.
+ * @const
+ * @type {!boolean}
+ */
+gui.HyperlinkController.SELECTED_TEXT_ONLY = true;
