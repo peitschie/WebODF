@@ -182,8 +182,18 @@ gui.HyperlinkControllerTests = function HyperlinkControllerTests(runner) {
 
         t.actualDoc = serializeTextBodyContent();
         t.expectedDoc = '<text:p>ABC</text:p>';
-        // TODO currently failing!
-        // r.shouldBe(t, "t.actualDoc", "t.expectedDoc");
+        r.shouldBe(t, "t.actualDoc", "t.expectedDoc");
+    }
+
+    function removeHyperlinks_IntersectingLinks_CollapsedAtLinkStart_RemovesLink() {
+        // Due to how step rounding works, it's not really possible to put a cursor just inside a link
+        createOdtDocument('<text:p>A<text:a xlink:type="simple" xlink:href="http://link1">[]BC</text:a>D</text:p>');
+
+        t.hyperlinkController.removeHyperlinks(INTERSECTING_LINKS);
+
+        t.actualDoc = serializeTextBodyContent();
+        t.expectedDoc = '<text:p>ABCD</text:p>';
+        r.shouldBe(t, "t.actualDoc", "t.expectedDoc");
     }
 
     function removeHyperlinks_IntersectingLinks_1LinkContained_RemovesLink() {
@@ -316,6 +326,7 @@ gui.HyperlinkControllerTests = function HyperlinkControllerTests(runner) {
 
             removeHyperlinks_IntersectingLinks_NoLinksSelected_DoesNothing,
             removeHyperlinks_IntersectingLinks_CollapsedWithinLink_RemovesLink,
+            removeHyperlinks_IntersectingLinks_CollapsedAtLinkStart_RemovesLink,
             removeHyperlinks_IntersectingLinks_1LinkContained_RemovesLink,
             removeHyperlinks_IntersectingLinks_1LinkPartiallySelected_RemovesLink,
             removeHyperlinks_IntersectingLinks_2LinksPartiallySelected_RemovesLinks,

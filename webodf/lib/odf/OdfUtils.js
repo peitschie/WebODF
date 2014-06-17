@@ -1000,29 +1000,29 @@ odf.OdfUtils = function OdfUtils() {
      */
     this.getHyperlinkElements = function (range) {
         var links = [],
-            newRange = /** @type {!Range}*/(range.cloneRange()),
-            node,
+            newRange,
             textNodes;
 
-        if (range.collapsed && range.endContainer.nodeType === Node.ELEMENT_NODE) {
-            node = getRightNode(range.endContainer, range.endOffset);
-            if (node.nodeType === Node.TEXT_NODE) {
-                newRange.setEnd(node, 1);
-            }
-        }
-
-        textNodes = getTextElements(newRange, true, false);
-        textNodes.forEach(function (node) {
-            var parent = node.parentNode;
-            while (!isParagraph(parent)) {
-                if (isHyperlink(parent) && links.indexOf(parent) === -1) {
-                    links.push(parent);
-                    break;
+        // Due to how step rounding works, it's not really possible to put a cursor just inside a link.
+        if (range.collapsed) {
+            prependParentContainers(/**@type{!Node}*/(range.startContainer), links, isHyperlink);
+        } else {
+            // In order to still allow accurate selection of links, if there is a non-collapsed range, only
+            // consider links that are parents of contained text nodes.
+            newRange = /** @type {!Range}*/(range.cloneRange());
+            textNodes = getTextElements(newRange, true, false);
+            textNodes.forEach(function (node) {
+                var parent = node.parentNode;
+                while (!isParagraph(parent)) {
+                    if (isHyperlink(parent) && links.indexOf(parent) === -1) {
+                        links.push(parent);
+                        break;
+                    }
+                    parent = parent.parentNode;
                 }
-                parent = parent.parentNode;
-            }
-        });
-        newRange.detach();
+            });
+            newRange.detach();
+        }
         return links;
     };
 

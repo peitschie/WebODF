@@ -46,6 +46,8 @@ gui.HyperlinkController = function HyperlinkController(
             gui.HyperlinkController.enabledChanged
         ]),
         /**@const*/
+        INTERSECTING_LINKS = gui.HyperlinkController.INTERSECTING_LINKS,
+        /**@const*/
         SELECTED_TEXT_ONLY = gui.HyperlinkController.SELECTED_TEXT_ONLY,
         isEnabled = false;
 
@@ -141,11 +143,11 @@ gui.HyperlinkController = function HyperlinkController(
      * Remove hyperlinks within the current selection
      * @param {!boolean} selectionOnly When true, only remove hyperlinks from selected text. Otherwise,
      *      completely remove any hyperlinks that intersect with the current selection.
+     * @param {!Range} selectedRange Range to remove hyperlinks within
      * @return {!Array.<!ops.Operation>}
      */
-    function createRemoveHyperlinkOps(selectionOnly) {
+    function createRemoveHyperlinkOps(selectionOnly, selectedRange) {
         var iterator = gui.SelectionMover.createPositionIterator(odtDocument.getRootNode()),
-            selectedRange = odtDocument.getCursor(inputMemberId).getSelectedRange(),
             links = odfUtils.getHyperlinkElements(selectedRange),
             domRange = odtDocument.getDOMDocument().createRange(),
             operations = [],
@@ -153,7 +155,8 @@ gui.HyperlinkController = function HyperlinkController(
             cursorRange,
             firstLink, lastLink, offset, op;
 
-        if (links.length === 0) {
+        if (links.length === 0
+            || (selectedRange.collapsed && selectionOnly === SELECTED_TEXT_ONLY)) {
             return operations;
         }
 
@@ -238,7 +241,22 @@ gui.HyperlinkController = function HyperlinkController(
         if (!isEnabled) {
             return;
         }
-        session.enqueue(createRemoveHyperlinkOps(selectionOnly));
+        var selectedRange = odtDocument.getCursor(inputMemberId).getSelectedRange(),
+            removeOps = createRemoveHyperlinkOps(selectionOnly, selectedRange),
+            stepIterator;
+
+        if (removeOps.length === 0 && selectedRange.collapsed) {
+            stepIterator = odtDocument.createStepIterator(selectedRange.startContainer, selectedRange.startOffset,
+                                                            [odtDocument.getPositionFilter(), odtDocument.createRootFilter(inputMemberId)],
+                                                            odfUtils.getParagraphElement(selectedRange.startContainer));
+            if (stepIterator.nextStep()) {
+                selectedRange = selectedRange.cloneRange();
+                selectedRange.setStart(stepIterator.container(),stepIterator.offset());
+                selectedRange.collapse(true);
+                removeOps = createRemoveHyperlinkOps(selectionOnly, selectedRange);
+            }
+        }
+        session.enqueue(removeOps);
     };
 
     /**
@@ -251,11 +269,12 @@ gui.HyperlinkController = function HyperlinkController(
             return;
         }
         var selection = odtDocument.getCursorSelection(inputMemberId),
+            selectedRange = odtDocument.getCursor(inputMemberId).getSelectedRange(),
             operations,
             op;
 
         runtime.assert(selection.length > 0, "Can't call setHyperlink on a collapsed selection");
-        operations = createRemoveHyperlinkOps(SELECTED_TEXT_ONLY);
+        operations = createRemoveHyperlinkOps(SELECTED_TEXT_ONLY, selectedRange);
 
         op = new ops.OpApplyHyperlink();
         op.init({
