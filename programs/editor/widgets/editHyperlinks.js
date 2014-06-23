@@ -80,6 +80,9 @@ define("webodf/editor/widgets/editHyperlinks", [
             }
 
             function checkHyperlinkButtons() {
+                if (!hyperlinkController.isEnabled()) {
+                    return;
+                }
                 var linksInSelection = editorSession.getSelectedHyperlinks();
 
                 // The 3rd parameter is false to avoid firing onChange when setting the value programmatically.
