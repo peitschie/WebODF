@@ -83,6 +83,9 @@ define("webodf/editor/EditorSession", [
                 EditorSession.signalCommonStyleDeleted,
                 EditorSession.signalParagraphStyleModified,
                 EditorSession.signalUndoStackChanged]),
+            batchedEventNotifier = new core.EventNotifier(),
+            /**@type{!Object.<!string,!core.ScheduledTask>}*/
+            registeredBatchSignals = {},
             shadowCursor = new gui.ShadowCursor(odtDocument),
             sessionConstraints,
             /**@const*/
@@ -274,6 +277,32 @@ define("webodf/editor/EditorSession", [
          */
         this.unsubscribe = function (eventid, cb) {
             eventNotifier.unsubscribe(eventid, cb);
+        };
+
+        /**
+         * Subscribe to a given event with a callback
+         * @param {!string} eventid
+         * @param {!function():undefined} cb
+         */
+        this.subscribeBatched = function (eventid, cb) {
+            var task;
+            if (!registeredBatchSignals.hasOwnProperty(eventid)) {
+                task = registeredBatchSignals[eventid] = core.Task.createRedrawTask(function() {
+                    batchedEventNotifier.emit(eventid);
+                });
+                eventNotifier.subscribe(eventid, task.trigger);
+                batchedEventNotifier.register(eventid);
+            }
+            batchedEventNotifier.subscribe(eventid, cb);
+        };
+
+        /**
+         * @param {!string} eventid
+         * @param {!Function} cb
+         * @return {undefined}
+         */
+        this.unsubscribeBatched = function (eventid, cb) {
+            batchedEventNotifier.unsubscribe(eventid, cb);
         };
 
         this.getCursorPosition = function () {
@@ -578,6 +607,12 @@ define("webodf/editor/EditorSession", [
                     hyperlinkTooltipView.destroy,
                     destroy
                 ];
+
+            Object.keys(registeredBatchSignals).forEach(function(signal) {
+                var task = registeredBatchSignals[signal];
+                eventNotifier.unsubscribe(signal, task.trigger);
+                cleanup.push(task.destroy);
+            });
 
             core.Async.destroyAll(cleanup, callback);
         };

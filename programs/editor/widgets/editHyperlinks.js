@@ -121,9 +121,9 @@ define("webodf/editor/widgets/editHyperlinks", [
 
             this.setEditorSession = function (session) {
                 if (editorSession) {
-                    editorSession.unsubscribe(EditorSession.signalCursorMoved, checkHyperlinkButtons);
-                    editorSession.unsubscribe(EditorSession.signalParagraphChanged, checkHyperlinkButtons);
-                    editorSession.unsubscribe(EditorSession.signalParagraphStyleModified, checkHyperlinkButtons);
+                    editorSession.unsubscribeBatched(EditorSession.signalCursorMoved, checkHyperlinkButtons);
+                    editorSession.unsubscribeBatched(EditorSession.signalParagraphChanged, checkHyperlinkButtons);
+                    editorSession.unsubscribeBatched(EditorSession.signalParagraphStyleModified, checkHyperlinkButtons);
                     hyperlinkController.unsubscribe(gui.HyperlinkController.enabledChanged, enableHyperlinkButtons);
                 }
 
@@ -131,9 +131,9 @@ define("webodf/editor/widgets/editHyperlinks", [
                 if (editorSession) {
                     hyperlinkController = editorSession.sessionController.getHyperlinkController();
 
-                    editorSession.subscribe(EditorSession.signalCursorMoved, checkHyperlinkButtons);
-                    editorSession.subscribe(EditorSession.signalParagraphChanged, checkHyperlinkButtons);
-                    editorSession.subscribe(EditorSession.signalParagraphStyleModified, checkHyperlinkButtons);
+                    editorSession.subscribeBatched(EditorSession.signalCursorMoved, checkHyperlinkButtons);
+                    editorSession.subscribeBatched(EditorSession.signalParagraphChanged, checkHyperlinkButtons);
+                    editorSession.subscribeBatched(EditorSession.signalParagraphStyleModified, checkHyperlinkButtons);
                     hyperlinkController.subscribe(gui.HyperlinkController.enabledChanged, enableHyperlinkButtons);
 
                     enableHyperlinkButtons(hyperlinkController.isEnabled());
