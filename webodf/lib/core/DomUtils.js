@@ -361,34 +361,34 @@
         }
 
         /**
-         * Checks all nodes between the tree walker's current node and the defined
-         * root. If any nodes are rejected, the tree walker is moved to the
+         * Checks all nodes between the supplied node and the defined
+         * root. If any nodes are rejected, the function will return the
          * highest rejected node below the root. Note, the root is excluded from
          * this check.
          *
          * This logic is similar to PositionIterator.moveToAcceptedNode
-         * @param {!TreeWalker} walker
+         * @param {!Node} node
          * @param {!Node} root
          * @param {!function(!Node) : number} nodeFilter
          *
-         * @return {!Node} Returns the current node the walker is on
+         * @return {?Node} Returns the highest rejected parent, or null if no rejected parents are found
          */
-        function moveToNonRejectedNode(walker, root, nodeFilter) {
-            var node = walker.currentNode;
+        function findRejectedParent(node, root, nodeFilter) {
+            var resultNode = null;
 
-            // Ensure currentNode is not within a rejected subtree by crawling each parent node
+            // Ensure node is not within a rejected subtree by crawling each parent node
             // up to the root and verifying it is either accepted or skipped by the nodeFilter.
             // NOTE: The root is deliberately not checked as it is the container iteration happens within.
             if (node !== root) {
                 node = node.parentNode;
                 while (node && node !== root) {
                     if (nodeFilter(node) === NodeFilter.FILTER_REJECT) {
-                        walker.currentNode = node;
+                        resultNode = node;
                     }
                     node = node.parentNode;
                 }
             }
-            return walker.currentNode;
+            return resultNode;
         }
 
         /**
@@ -445,7 +445,8 @@
             if (currentNode) {
                 // If the treeWalker hit the end of the sequence in the treeWalker.nextNode line just above,
                 // currentNode will be null.
-                currentNode = moveToNonRejectedNode(treeWalker, root, nodeFilter);
+                currentNode = findRejectedParent(currentNode, root, nodeFilter) || currentNode;
+                treeWalker.currentNode = currentNode;
                 switch (nodeFilter(/**@type{!Node}*/(currentNode))) {
                     case NodeFilter.FILTER_REJECT:
                         // If started on a rejected node, calling nextNode will incorrectly
