@@ -57,7 +57,12 @@ odf.OdfUtils = function OdfUtils() {
             odf.Namespaces.tablens,
             odf.Namespaces.textns
         ],
-        odfSchema = odf.OdfSchema;
+        odfSchema = odf.OdfSchema,
+        TEXT_NODE = Node.TEXT_NODE,
+        ELEMENT_NODE = Node.ELEMENT_NODE,
+        FILTER_ACCEPT = NodeFilter.FILTER_ACCEPT,
+        FILTER_REJECT = NodeFilter.FILTER_REJECT,
+        FILTER_SKIP = NodeFilter.FILTER_SKIP;
 
     /**
      * Determine if the node is a draw:image element.
@@ -77,7 +82,7 @@ odf.OdfUtils = function OdfUtils() {
      */
     function isCharacterFrame(e) {
         // TODO the anchor-type can be defined on any style associated with the frame
-        return e !== null && e.nodeType === Node.ELEMENT_NODE
+        return e !== null && e.nodeType === ELEMENT_NODE
             && e.localName === "frame" && e.namespaceURI === drawns
             && /**@type{!Element}*/(e).getAttributeNS(textns, "anchor-type")
                 === "as-char";
@@ -265,7 +270,7 @@ odf.OdfUtils = function OdfUtils() {
      * @return {!boolean}
      */
     function isGroupingElement(n) {
-        if (n === null || n.nodeType !== Node.ELEMENT_NODE) {
+        if (n === null || n.nodeType !== ELEMENT_NODE) {
             return false;
         }
         var e = /**@type{!Element}*/(n),
@@ -361,7 +366,7 @@ odf.OdfUtils = function OdfUtils() {
         if (isCharacterElement(node) || isFieldElement(node)) {
             return false;
         }
-        if (isGroupingElement(/**@type{!Node}*/(node.parentNode)) && node.nodeType === Node.TEXT_NODE) {
+        if (isGroupingElement(/**@type{!Node}*/(node.parentNode)) && node.nodeType === TEXT_NODE) {
             return node.textContent.length === 0;
         }
         childNode = node.firstChild;
@@ -432,7 +437,7 @@ odf.OdfUtils = function OdfUtils() {
         var r = false,
             text;
         while (node) {
-            if (node.nodeType === Node.TEXT_NODE) {
+            if (node.nodeType === TEXT_NODE) {
                 text = /**@type{!Text}*/(node);
                 if (text.length === 0) {
                     node = previousNode(text);
@@ -464,7 +469,7 @@ odf.OdfUtils = function OdfUtils() {
      */
     function lookLeftForCharacter(node) {
         var text, r = 0, tl = 0;
-        if (node.nodeType === Node.TEXT_NODE) {
+        if (node.nodeType === TEXT_NODE) {
             tl = /**@type{!Text}*/(node).length;
         }
         if (tl > 0) {
@@ -493,7 +498,7 @@ odf.OdfUtils = function OdfUtils() {
     function lookRightForCharacter(node) {
         var r = false,
             l = 0;
-        if (node && node.nodeType === Node.TEXT_NODE) {
+        if (node && node.nodeType === TEXT_NODE) {
             l = /**@type{!Text}*/(node).length;
         }
         if (l > 0) {
@@ -515,7 +520,7 @@ odf.OdfUtils = function OdfUtils() {
         var r = false, l;
         node = node && lastChild(node);
         while (node) {
-            if (node.nodeType === Node.TEXT_NODE) {
+            if (node.nodeType === TEXT_NODE) {
                 l = /**@type{!Text}*/(node).length;
             } else {
                 l = 0;
@@ -544,7 +549,7 @@ odf.OdfUtils = function OdfUtils() {
         var r = false, l;
         node = node && firstChild(node);
         while (node) {
-            if (node.nodeType === Node.TEXT_NODE) {
+            if (node.nodeType === TEXT_NODE) {
                 l = /**@type{!Text}*/(node).length;
             } else {
                 l = 0;
@@ -806,13 +811,13 @@ odf.OdfUtils = function OdfUtils() {
          * @return {number}
          */
         function nodeFilter(node) {
-            var result = NodeFilter.FILTER_REJECT;
-            if (node.nodeType === Node.TEXT_NODE) {
+            var result = FILTER_REJECT;
+            if (node.nodeType === TEXT_NODE) {
                 if (isSignificantTextContent(/**@type{!Text}*/(node))) {
-                    result = NodeFilter.FILTER_ACCEPT;
+                    result = FILTER_ACCEPT;
                 }
             } else if (isTextContentContainingNode(node)) {
-                result = NodeFilter.FILTER_SKIP;
+                result = FILTER_SKIP;
             }
             return result;
         }
@@ -855,22 +860,22 @@ odf.OdfUtils = function OdfUtils() {
          * @return {number}
          */
         function nodeFilter(node) {
-            var result = NodeFilter.FILTER_REJECT;
+            var result = FILTER_REJECT;
             // do not return anything inside an character element or an inline root such as an annotation
             if (isCharacterElement(node.parentNode) || isFieldElement(node.parentNode) || isInlineRoot(node)) {
-                result = NodeFilter.FILTER_REJECT;
+                result = FILTER_REJECT;
             } else if (node.nodeType === Node.TEXT_NODE) {
                 if (includeInsignificantWhitespace || isSignificantTextContent(/**@type{!Text}*/(node))) {
                         // Text nodes should only be returned if they are
                         // fully contained within the range.
-                    result = NodeFilter.FILTER_ACCEPT;
+                    result = FILTER_ACCEPT;
                 }
             } else if (isAnchoredAsCharacterElement(node)) {
                 // Character elements should only be returned if they are
                 // fully contained within the range.
-                result =  NodeFilter.FILTER_ACCEPT;
+                result =  FILTER_ACCEPT;
             } else if (isTextContentContainingNode(node) || isGroupingElement(node)) {
-                result =  NodeFilter.FILTER_SKIP;
+                result =  FILTER_SKIP;
             }
             return result;
         }
@@ -931,11 +936,11 @@ odf.OdfUtils = function OdfUtils() {
          * @return {number}
          */
         function nodeFilter(node) {
-            var result = NodeFilter.FILTER_REJECT;
+            var result = FILTER_REJECT;
             if (isParagraph(node)) {
-                result = NodeFilter.FILTER_ACCEPT;
+                result = FILTER_ACCEPT;
             } else if (isTextContentContainingNode(node) || isGroupingElement(node)) {
-                result = NodeFilter.FILTER_SKIP;
+                result = FILTER_SKIP;
             }
             return result;
         }
@@ -966,9 +971,9 @@ odf.OdfUtils = function OdfUtils() {
          * @return {number}
          */
         function nodeFilter(node) {
-            var result = NodeFilter.FILTER_SKIP;
+            var result = FILTER_SKIP;
             if (isImage(node)) {
-                result = NodeFilter.FILTER_ACCEPT;
+                result = FILTER_ACCEPT;
             }
             return result;
         }
@@ -1018,9 +1023,9 @@ odf.OdfUtils = function OdfUtils() {
             node,
             textNodes;
 
-        if (range.collapsed && range.endContainer.nodeType === Node.ELEMENT_NODE) {
+        if (range.collapsed && range.endContainer.nodeType === ELEMENT_NODE) {
             node = getRightNode(range.endContainer, range.endOffset);
-            if (node.nodeType === Node.TEXT_NODE) {
+            if (node.nodeType === TEXT_NODE) {
                 newRange.setEnd(node, 1);
             }
         }
