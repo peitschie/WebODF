@@ -374,18 +374,19 @@
          * @return {?Node} Returns the highest rejected parent, or null if no rejected parents are found
          */
         function findRejectedParent(node, root, nodeFilter) {
-            var resultNode = null;
+            var resultNode = null,
+                parent;
 
             // Ensure node is not within a rejected subtree by crawling each parent node
             // up to the root and verifying it is either accepted or skipped by the nodeFilter.
             // NOTE: The root is deliberately not checked as it is the container iteration happens within.
             if (node !== root) {
-                node = node.parentNode;
-                while (node && node !== root) {
-                    if (nodeFilter(node) === NodeFilter.FILTER_REJECT) {
-                        resultNode = node;
+                parent = node.parentNode;
+                while (parent && parent !== root) {
+                    if (nodeFilter(parent) === NodeFilter.FILTER_REJECT) {
+                        resultNode = parent;
                     }
-                    node = node.parentNode;
+                    parent = parent.parentNode;
                 }
             }
             return resultNode;
@@ -486,7 +487,36 @@
             return elements;
         }
         /*jslint bitwise:false*/
-        this.getNodesInRange = getNodesInRange;
+        /**
+         * Fetches all nodes within a supplied range that pass the required filter
+         * @param {!Range} range
+         * @param {!function(!Node) : number} nodeFilter
+         * @param {!number} whatToShow
+         * @return {!Array.<!Node>}
+         */
+        /*jslint unparam:true*/
+        function getNodesInRange2(range, nodeFilter, whatToShow) {
+            var rangeRoot = range.commonAncestorContainer,
+                root = /**@type{!Node}*/(rangeRoot.nodeType === Node.TEXT_NODE ? rangeRoot.parentNode : rangeRoot),
+                rejectedParent,
+                nodes;
+
+            rejectedParent = findRejectedParent(/**@type{!Node}*/(range.startContainer), root, nodeFilter);
+            if (rejectedParent) {
+                range = /**@type{!Range}*/(range.cloneRange());
+                range.setStartAfter(rejectedParent);
+            }
+            nodes = core.iterateSubTree(range, nodeFilter);
+            if (nodes[0] === range.startContainer && range.startOffset === maximumOffset(nodes[0])) {
+                nodes.shift();
+            }
+            if (nodes[nodes.length - 1] === root) {
+                nodes.pop();
+            }
+            return nodes;
+        }
+        /*jslint unparam:false*/
+        this.getNodesInRange = getNodesInRange2 || getNodesInRange;
 
         /**
          * Merges the content of node with nextNode.

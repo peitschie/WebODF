@@ -25,6 +25,7 @@ module.exports = function (config) {
             'lib/core/ByteArray.js',
             'lib/core/ByteArrayWriter.js',
             'lib/core/CSSUnits.js',
+            'lib/core/RangeIterator.js',
             'lib/core/DomUtils.js',
             'lib/core/Cursor.js',
             'lib/core/Destroyable.js',

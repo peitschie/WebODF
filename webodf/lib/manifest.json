@@ -15,6 +15,7 @@
     "core.Destroyable": [
     ],
     "core.DomUtils": [
+        "core.RangeIterator"
     ],
     "core.EventNotifier": [
         "core.EventSource"
@@ -37,6 +38,8 @@
         "core.PositionFilter"
     ],
     "core.PositionIterator": [
+    ],
+    "core.RangeIterator": [
     ],
     "core.RawInflate": [
     ],
