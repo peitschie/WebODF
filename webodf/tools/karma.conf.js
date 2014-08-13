@@ -53,6 +53,7 @@ module.exports = function (config) {
             'lib/odf/StyleInfo.js',
             'lib/xmldom/LSSerializer.js',
             'lib/odf/OdfContainer.js',
+            'lib/odf/ContainerInfo.js',
             'lib/odf/OdfUtils.js',
             'lib/gui/AnnotationViewManager.js',
             'lib/gui/Viewport.js',

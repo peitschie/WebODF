@@ -247,6 +247,9 @@
     "odf.CommandLineTools": [
         "odf.OdfCanvas"
     ],
+    "odf.ContainerInfo": [
+        "odf.Namespaces"
+    ],
     "odf.FontLoader": [
         "odf.OdfContainer",
         "odf.OdfUtils"
@@ -294,7 +297,7 @@
     ],
     "odf.OdfUtils": [
         "core.DomUtils",
-        "odf.Namespaces"
+        "odf.ContainerInfo"
     ],
     "odf.PageLayoutProperties": [
         "odf.StyleParseUtils"
