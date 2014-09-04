@@ -618,6 +618,7 @@ ops.OdtDocumentTests = function OdtDocumentTests(runner) {
             // *************** Draw elements *************** //
             "<text:p>|<draw:frame text:anchor-type=\"as-char\"><draw:image><office:binary-data>data</office:binary-data></draw:image></draw:frame>|</text:p>",
             "<text:p><text:span>|<draw:frame text:anchor-type=\"as-char\"><draw:image><office:binary-data>data</office:binary-data></draw:image></draw:frame>|</text:span></text:p>",
+            "<text:p>|<draw:custom-shape><text:p>|</text:p></draw:custom-shape>|</text:p>",
 
 
             // *************** Annotations *************** //
