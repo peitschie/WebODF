@@ -337,7 +337,8 @@ Runtime.assert = function (condition, message) {
  */
 function BrowserRuntime(logoutput) {
     "use strict";
-    var self = this;
+    var self = this,
+        currentDirectory = "";
 
     /**
      * Return the number of bytes a string would take up when encoded as utf-8.
@@ -818,15 +819,18 @@ function BrowserRuntime(logoutput) {
         return ["lib"]; // TODO: find a good solution
                                        // probably let html app specify it
     };
-    /*jslint emptyblock: true*/
-    this.setCurrentDirectory = function () {
+    /**
+     * @param {!string} directory
+     * @return {undefined}
+     */
+    this.setCurrentDirectory = function (directory) {
+        currentDirectory = directory;
     };
-    /*jslint emptyblock: false*/
     /**
      * @return {!string}
      */
     this.currentDirectory = function () {
-        return "";
+        return currentDirectory;
     };
     this.type = function () {
         return "BrowserRuntime";

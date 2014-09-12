@@ -22,7 +22,17 @@
  * @source: https://github.com/kogmbh/WebODF/
  */
 
-/*global runtime, Runtime, core, gui, xmldom, RuntimeTests, odf, ops, webodf_css: true*/
+/*global runtime, Runtime, core, gui, xmldom, RuntimeTests, odf, ops*/
+
+if (runtime.getVariable("WEBODF_CURRENT_DIR")) {
+    runtime.setCurrentDirectory(/**@type{!string}*/(runtime.getVariable("WEBODF_CURRENT_DIR")));
+}
+if (runtime.getVariable("WEBODF_LIB_PATHS")) {
+    runtime.libraryPaths = function () {
+        "use strict";
+        return /**@type{!Array.<!string>}*/(runtime.getVariable("WEBODF_LIB_PATHS"));
+    };
+}
 
 runtime.loadClass("core.Base64Tests");
 runtime.loadClass("core.CursorTests");

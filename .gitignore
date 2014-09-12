@@ -31,8 +31,10 @@ node_modules/karma-phantomjs-launcher/
 node_modules/karma-requirejs/
 node_modules/karma-script-launcher/
 node_modules/karma/
+node_modules/phantomjs/
 fontFaceDeclsTest.odt
 test.odt
 simple.odt
 simpleFrame.odt
 webodf/tests/*.odt
+test-results.xml

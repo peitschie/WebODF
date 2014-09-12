@@ -3,8 +3,7 @@
 /**
  * Configuration for running tests in PhantomJS with Karma.
  *
- * To run these tests, install karma with
- *     npm install karma-coverage karma-junit-reporter
+ * To run these tests, install all NPM dependencies with `npm install`
  * Then run 'node ../node_modules/.bin/karma start tools/karma.conf.js' from
  * the directory 'webodf' that contains the 'tools' directory.
  * This results in a folder called 'coverage' with the coverage information of
@@ -165,11 +164,12 @@ module.exports = function (config) {
             'lib/xmldom/RelaxNGParser.js', // !
             'tests/*/*.js',
             'tests/tests.js',
-            { pattern: 'lib/manifest.json', included: false, watched: false, served: true },
-            { pattern: 'tests/manifest.json', included: false, watched: false, served: true },
-            { pattern: 'tests/**', served: true, included: false }
+            { pattern: 'webodf.css', included: false },
+            { pattern: 'lib/manifest.json', included: false },
+            { pattern: 'tests/manifest.json', included: false },
+            { pattern: 'tests/**', included: false }
         ],
-        browsers: ['PhantomJS', 'Chrome', 'Firefox'],
+        browsers: ['Chrome'],//, 'PhantomJS', 'Firefox'],
         reporters: ['progress', 'coverage', 'junit'],
         preprocessors: {
             'lib/*.js': ['coverage'],
@@ -178,7 +178,9 @@ module.exports = function (config) {
             'tests/*/*.js': ['coverage']
         },
         proxies: {
-            '/proxy': 'http://localhost:8642'
+            '/proxy': 'http://localhost:8642',
+            // TODO create a karma plugin to auto-start httpserver.js
+            '/proxy/resource': 'http://localhost:8124/webodf/webodf/tests'
         },
         urlRoot: '/proxy/',
         singleRun: true
