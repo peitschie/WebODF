@@ -32,8 +32,11 @@
  */
 odf.OdfContainerTests = function OdfContainerTests(runner) {
     "use strict";
-    var t, r = runner;
+    var t,
+        r = runner,
+        testOdt;
     this.setUp = function () {
+        testOdt =  r.resourceUrl("test.odt");
         t = {};
     };
     this.tearDown = function () {
@@ -157,10 +160,10 @@ odf.OdfContainerTests = function OdfContainerTests(runner) {
     function createNewSaveAsAndLoad(callback) {
         t.odf = new odf.OdfContainer(odf.OdfContainer.DocumentType.TEXT, null);
         r.shouldBe(t, "t.odf.state", "odf.OdfContainer.DONE");
-        t.odf.saveAs("test.odt", function (err) {
+        t.odf.saveAs(testOdt, function (err) {
             t.err = err;
             r.shouldBeNull(t, "t.err");
-            t.odf = new odf.OdfContainer("test.odt", function (odf) {
+            t.odf = new odf.OdfContainer(testOdt, function (odf) {
                 t.odf = odf;
                 r.shouldBe(t, "t.odf.state", "odf.OdfContainer.DONE");
                 callback();
@@ -172,11 +175,11 @@ odf.OdfContainerTests = function OdfContainerTests(runner) {
         t.odf = new odf.OdfContainer(odf.OdfContainer.DocumentType.TEXT, null);
         r.shouldBe(t, "t.odf.state", "odf.OdfContainer.DONE");
         t.odf.rootElement.settings = null;
-        t.odf.saveAs("test.odt", function (err) {
+        t.odf.saveAs(testOdt, function (err) {
             t.err = err;
             r.shouldBeNull(t, "t.err");
             r.shouldBeNull(t, "t.odf.rootElement.settings");
-            t.odf = new odf.OdfContainer("test.odt", function (odf) {
+            t.odf = new odf.OdfContainer(testOdt, function (odf) {
                 t.odf = odf;
                 r.shouldBe(t, "t.odf.state", "odf.OdfContainer.DONE");
                 // The value would only become null if it was a node. By default, random unspecified
@@ -191,12 +194,12 @@ odf.OdfContainerTests = function OdfContainerTests(runner) {
         t.odf = new odf.OdfContainer(odf.OdfContainer.DocumentType.TEXT, null);
         r.shouldBe(t, "t.odf.state", "odf.OdfContainer.DONE");
         t.odf.rootElement.meta = null;
-        t.odf.saveAs("test.odt", function (err) {
+        t.odf.saveAs(testOdt, function (err) {
             t.err = err;
             r.shouldBeNull(t, "t.err");
             // Metadata is always created when the generator string is updated to webodf
             r.shouldBeNonNull(t, "t.odf.rootElement.meta");
-            t.odf = new odf.OdfContainer("test.odt", function (odf) {
+            t.odf = new odf.OdfContainer(testOdt, function (odf) {
                 t.odf = odf;
                 r.shouldBe(t, "t.odf.state", "odf.OdfContainer.DONE");
                 r.shouldBeNonNull(t, "t.odf.rootElement.meta");
@@ -212,7 +215,7 @@ odf.OdfContainerTests = function OdfContainerTests(runner) {
         appendXmlsToNode(t.odf.rootElement.styles,          args.styles);
         appendXmlsToNode(t.odf.rootElement.automaticStyles, args.automaticStyles);
 
-        var path = r.resourcePrefix() + "fontFaceDeclsTest.odt";
+        var path = r.resourceUrl("fontFaceDeclsTest.odt");
         t.odf.saveAs(path, function (err) {
             t.err = err;
             r.shouldBeNull(t, "t.err");

@@ -201,6 +201,13 @@ core.UnitTestRunner = function UnitTestRunner(resourcePrefix, logger) {
         return resourcePrefix;
     };
     /**
+     * @param {!string} url
+     * @return {!string}
+     */
+    this.resourceUrl = function(url) {
+        return resourcePrefix + url;
+    };
+    /**
      * @return {undefined}
      */
     this.beginExpectFail = function () {

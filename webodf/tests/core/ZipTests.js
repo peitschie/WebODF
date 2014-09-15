@@ -44,14 +44,12 @@ core.ZipTests = function ZipTests(runner) {
     }
 
     function testNonZipFile(callback) {
-        var path = "core/ZipTests.js";
-        // check that file exists
-        path = r.resourcePrefix() + path;
+        var path = r.resourceUrl("core/ZipTests.js");
         runtime.readFile(path, "binary", function (error, data) {
             t.exists = !error && Boolean(data);
             r.shouldBe(t, "t.exists", "true");
             // check that zip file opening returns an error
-            t.zip = new core.Zip("core/ZipTests.js", function (err) {
+            t.zip = new core.Zip(path, function (err) {
                 t.err = err;
                 r.shouldBeNonNull(t, "t.err");
                 callback();
@@ -60,7 +58,7 @@ core.ZipTests = function ZipTests(runner) {
     }
 
     function testHi(path, callback) {
-        path = r.resourcePrefix() + path;
+        path = r.resourceUrl(path);
         t.zip = new core.Zip(path, function (err, zip) {
             t.err = err;
             t.zip = zip;
@@ -87,7 +85,7 @@ core.ZipTests = function ZipTests(runner) {
     }
 
     function testCreateZip(callback) {
-        var filename = r.resourcePrefix() + "writetest.zip",
+        var filename = r.resourceUrl("writetest.zip"),
             zip = new core.Zip(filename, null),
             data = runtime.byteArrayFromString(
                 "application/vnd.oasis.opendocument.text",
@@ -111,7 +109,7 @@ core.ZipTests = function ZipTests(runner) {
     }
 
     function testSave() {
-        var zip = new core.Zip("savetest.zip", null),
+        var zip = new core.Zip(r.resourceUrl("savetest.zip"), null),
             data = runtime.byteArrayFromString("hello", "utf8");
         zip.save("a", data, false, new Date());
         zip.save("b", data, false, new Date());
@@ -124,7 +122,7 @@ core.ZipTests = function ZipTests(runner) {
     }
 
     function testRemove() {
-        var zip = new core.Zip("savetest.zip", null),
+        var zip = new core.Zip(r.resourceUrl("savetest.zip"), null),
             data = runtime.byteArrayFromString("hello", "utf8");
         zip.save("a", data, false, new Date());
         zip.save("b", data, false, new Date());

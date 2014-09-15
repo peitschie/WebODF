@@ -556,10 +556,9 @@ ops.TransformationTests = function TransformationTests(runner) {
         core.UnitTest.cleanupTestAreaDiv();
     };
     this.tests = function () {
-        var pre = r.resourcePrefix();
         if (!tests) {
             tests = makeTestsIntoFunction(loadTestFiles(
-                [pre + "ops/transformationtests.xml"]
+                [r.resourceUrl("ops/transformationtests.xml")]
             ));
         }
         return tests;

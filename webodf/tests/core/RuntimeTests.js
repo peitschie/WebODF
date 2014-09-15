@@ -36,8 +36,7 @@ core.RuntimeTests = function RuntimeTests(runner) {
     var t, r = runner;
 
     function testRead(callback) {
-        var pre = r.resourcePrefix();
-        runtime.read(pre + "utf8.txt", 9, 5, function (err, data) {
+        runtime.read(r.resourceUrl("utf8.txt"), 9, 5, function (err, data) {
             t.err = err;
             r.shouldBeNull(t, "t.err");
             if (data) {
@@ -103,8 +102,7 @@ core.RuntimeTests = function RuntimeTests(runner) {
     }
 
     function testUtf8ByteArrayToString(callback) {
-        var pre = r.resourcePrefix();
-        runtime.read(pre + "utf8.txt", 14, 4, function (err, data) {
+        runtime.read(r.resourceUrl("utf8.txt"), 14, 4, function (err, data) {
             t.err = err;
             r.shouldBeNull(t, "t.err");
             t.data = data;
@@ -120,8 +118,7 @@ core.RuntimeTests = function RuntimeTests(runner) {
     }
 
     function testLoadXML(callback) {
-        var pre = r.resourcePrefix();
-        runtime.loadXML(pre + "tests.html", function (err, xml) {
+        runtime.loadXML(r.resourceUrl("tests.html"), function (err, xml) {
             t.err = err || null;
             t.xml = xml || null;
             r.shouldBeNull(t, "t.err");

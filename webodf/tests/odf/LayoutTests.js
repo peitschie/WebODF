@@ -146,7 +146,7 @@ odf.LayoutTests = function LayoutTests(runner) {
             root = odfContainer.rootElement,
             oldContent = root.body.getElementsByTagNameNS(officens, tag)[0],
             extension = isText ? ".odt" : ".odp",
-            path = test.name + extension;
+            path = r.resourceUrl(test.name + extension);
         replaceChildren(root.styles,
             input.getElementsByTagNameNS(officens, "styles"));
         replaceChildren(root.automaticStyles,
@@ -310,11 +310,10 @@ odf.LayoutTests = function LayoutTests(runner) {
         return [];
     };
     this.asyncTests = function () {
-        var pre = r.resourcePrefix();
         if (!tests) {
             tests = makeTestsIntoFunction(loadTestFiles([
-                pre + "odf/layouttests.xml",
-                pre + "odf/odplayouttests.xml"
+                r.resourceUrl("odf/layouttests.xml"),
+                r.resourceUrl("odf/odplayouttests.xml")
             ]));
         }
         return tests;
