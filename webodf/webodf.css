@@ -711,28 +711,30 @@ text|section {
 
 text|section[text|style-name="Sect1"] {
     -webkit-column-count: 2;
+    -moz-column-count: 2;
 }
 
 text|section[text|style-name="Sect2"] {
     -webkit-column-count: 3;
+    -moz-column-count: 3;
 }
 
 office|body {
-    -webkit-column-count: 2;
+    height: 29.7cm;
+
+    -webkit-column-count: 3;
     -webkit-column-gap: 40px;
     -webkit-column-rule: 40px solid #ddd;
+
+    -moz-column-count: 3;
+    -moz-column-gap: 40px;
+    -moz-column-rule: 40px solid #ddd;
 }
 
-/* re-add page margins */
-text|p[text|style-name="P3"]::after,
-text|p[text|style-name="P4"]::before
+text|p[text|style-name="P3"],
+text|p[text|style-name="P4"]
 {
-    display: block;
-    height: 2cm;
-    content: "\200B"; /* ZERO WIDTH SPACE */
-    white-space: pre;
-}
-
-text|p[text|style-name="P4"] {
+    padding-top: 2cm; /* re-add page margins*/
     -webkit-column-break-before: always;
+    -moz-column-break-before: always;
 }
