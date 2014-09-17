@@ -720,13 +720,11 @@ text|section[text|style-name="Sect2"] {
 }
 
 office|body {
-    height: 29.7cm;
-
-    -webkit-column-count: 3;
+    -webkit-column-count: 2;
     -webkit-column-gap: 40px;
     -webkit-column-rule: 40px solid #ddd;
 
-    -moz-column-count: 3;
+    -moz-column-count: 2;
     -moz-column-gap: 40px;
     -moz-column-rule: 40px solid #ddd;
 }
@@ -737,4 +735,13 @@ text|p[text|style-name="P4"]
     padding-top: 2cm; /* re-add page margins*/
     -webkit-column-break-before: always;
     -moz-column-break-before: always;
+}
+
+webodfhelper|page-break
+{
+    display: block;
+    height: 20px;
+    width: 100%;
+    -webkit-column-span: all;
+    background-color: #ddd;
 }

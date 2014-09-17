@@ -163,6 +163,9 @@
     "gui.OdfTextBodyNodeFilter": [
         "odf.OdfUtils"
     ],
+    "gui.Paginator": [
+        "odf.OdfCanvas"
+    ],
     "gui.ParagraphBoundaryScanner": [
         "gui.VisualStepScanner",
         "odf.OdfUtils"

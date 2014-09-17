@@ -40,6 +40,7 @@ define("webodf/editor/EditorSession", [
     runtime.loadClass("odf.OdfUtils");
     runtime.loadClass("gui.CaretManager");
     runtime.loadClass("gui.Caret");
+    runtime.loadClass("gui.Paginator");
     runtime.loadClass("gui.SessionController");
     runtime.loadClass("gui.SessionView");
     runtime.loadClass("gui.HyperlinkTooltipView");
@@ -586,8 +587,10 @@ define("webodf/editor/EditorSession", [
         function init() {
             var head = document.getElementsByTagName('head')[0],
                 odfCanvas = session.getOdtDocument().getOdfCanvas(),
-                eventManager;
+                eventManager,
+                paginator = new gui.Paginator(odfCanvas);
 
+            paginator.render();
             // TODO: fonts.css should be rather done by odfCanvas, or?
             fontStyles.type = 'text/css';
             fontStyles.media = 'screen, print, handheld, projection';
