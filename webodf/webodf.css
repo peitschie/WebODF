@@ -41,7 +41,7 @@ office|document > *, office|document-content > * {
   display: none;
 }
 office|body, office|document {
-  display: inline-block;
+  display: block;
   position: relative;
 }
 
@@ -703,4 +703,36 @@ div.webodf-customScrollbars::-webkit-scrollbar-thumb
 .webodf-hyperlinkTooltipText {
     display: block;
     font-weight: bold;
+}
+
+text|section {
+    display: block;
+}
+
+text|section[text|style-name="Sect1"] {
+    -webkit-column-count: 2;
+}
+
+text|section[text|style-name="Sect2"] {
+    -webkit-column-count: 3;
+}
+
+office|body {
+    -webkit-column-count: 2;
+    -webkit-column-gap: 40px;
+    -webkit-column-rule: 40px solid #ddd;
+}
+
+/* re-add page margins */
+text|p[text|style-name="P3"]::after,
+text|p[text|style-name="P4"]::before
+{
+    display: block;
+    height: 2cm;
+    content: "\200B"; /* ZERO WIDTH SPACE */
+    white-space: pre;
+}
+
+text|p[text|style-name="P4"] {
+    -webkit-column-break-before: always;
 }

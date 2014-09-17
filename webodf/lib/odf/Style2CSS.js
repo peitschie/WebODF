@@ -928,7 +928,7 @@ odf.Style2CSS = function Style2CSS() {
             // So till then, set only the width.
             //rule += applySimpleMapping(props, pageSizePropertySimpleMapping);
             pageSizeRule = 'office|body {'
-                + 'width: ' + props.getAttributeNS(fons, 'page-width') + ';'
+                + 'width: ' + (parseInt(props.getAttributeNS(fons, 'page-width'))*2) + 'cm;'
                 + '}';
 
             sheet.insertRule(contentLayoutRule, sheet.cssRules.length);
