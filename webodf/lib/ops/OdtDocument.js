@@ -79,7 +79,10 @@ ops.OdtDocument = function OdtDocument(odfCanvas) {
         /**@const*/ SHOW_ALL = NodeFilter.SHOW_ALL,
         blacklistedNodes = new gui.BlacklistNamespaceNodeFilter(["urn:webodf:names:cursor", "urn:webodf:names:editinfo"]),
         odfTextBodyFilter = new gui.OdfTextBodyNodeFilter(),
-        defaultNodeFilter = new core.NodeFilterChain([blacklistedNodes, odfTextBodyFilter]);
+        defaultNodeFilter = new core.NodeFilterChain([blacklistedNodes, odfTextBodyFilter]),
+        /**@type{!Array.<!function():undefined>}*/
+        pendingSignals = [],
+        isExecutingOp = false;
 
     /**
      *
@@ -884,12 +887,22 @@ ops.OdtDocument = function OdtDocument(odfCanvas) {
     };
 
     /**
+     * Emit a signal to interested subscribers. Note, if signal emitting has been paused
+     * then subscribers will not be notified until resumeSignalEmitting is called. The order
+     * of signal calls will still be preserved however.
+     *
      * @param {!string} eventid
      * @param {*} args
      * @return {undefined}
      */
     this.emit = function (eventid, args) {
-        eventNotifier.emit(eventid, args);
+        if (isExecutingOp) {
+            pendingSignals.push(function() {
+                eventNotifier.emit(eventid, args);
+            });
+        } else {
+            eventNotifier.emit(eventid, args);
+        }
     };
 
     /**
@@ -955,6 +968,28 @@ ops.OdtDocument = function OdtDocument(odfCanvas) {
     this.handleStepsRemoved = function(args) {
         stepsTranslator.handleStepsRemoved(args);
         self.emit(ops.OdtDocument.signalStepsRemoved, args);
+    };
+
+    /**
+     * Causes emitted signals to be queued up until resumeSignalEmitting is called.
+     * @return {undefined}
+     */
+    this.pauseSignalEmitting = function() {
+        isExecutingOp = true;
+    };
+
+    /**
+     * Process all queued signals and resume immediate signalling.
+     * @return {undefined}
+     */
+    this.resumeSignalEmitting = function() {
+        var signal;
+        isExecutingOp = false;
+        signal = pendingSignals.shift();
+        while (signal) {
+            signal();
+            signal = pendingSignals.shift();
+        }
     };
 
     /**
