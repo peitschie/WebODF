@@ -898,7 +898,15 @@ ops.OdtDocument = function OdtDocument(odfCanvas) {
     this.emit = function (eventid, args) {
         if (isExecutingOp) {
             pendingSignals.push(function() {
-                eventNotifier.emit(eventid, args);
+                try {
+                    eventNotifier.emit(eventid, args);
+                } catch(/**@type{!Error}*/err) {
+                    // Don't let queued signals throw an error. Throwing during playback can have adverse effects on
+                    // further processing of pending signals.
+                    runtime.log("ERROR",
+                            "Unhandled exception when processing signal '" + eventid + "' - " + String(err) + "\n" +
+                            err.stack);
+                }
             });
         } else {
             eventNotifier.emit(eventid, args);
@@ -975,6 +983,7 @@ ops.OdtDocument = function OdtDocument(odfCanvas) {
      * @return {undefined}
      */
     this.pauseSignalEmitting = function() {
+        runtime.assert(pendingSignals.length === 0, "pauseSignalEmitting called with uncleared pending signals");
         isExecutingOp = true;
     };
 

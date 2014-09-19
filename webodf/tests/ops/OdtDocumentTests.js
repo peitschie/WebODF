@@ -602,6 +602,24 @@ ops.OdtDocumentTests = function OdtDocumentTests(runner) {
         r.shouldBe(t, "t.emitCalls", "['call1', 'call2']");
     }
 
+    function emitSignals_ExceptionsThrownDuringDelayedEmit_DontPreventFurtherSignals() {
+        createOdtDocument("<text:p/>");
+        t.emitCalls = [];
+        t.odtDocument.subscribe(ops.OdtDocument.signalParagraphChanged, function(args) { t.emitCalls.push(args); });
+        t.odtDocument.subscribe(ops.OdtDocument.signalTableAdded, function(args) {
+            t.emitCalls.push(args);
+            throw new Error("intentional error");
+        });
+
+        t.odtDocument.pauseSignalEmitting();
+        t.odtDocument.emit(ops.OdtDocument.signalParagraphChanged, "call1");
+        t.odtDocument.emit(ops.OdtDocument.signalTableAdded, "call2");
+        t.odtDocument.emit(ops.OdtDocument.signalParagraphChanged, "call3");
+        t.odtDocument.resumeSignalEmitting();
+
+        r.shouldBe(t, "t.emitCalls", "['call1', 'call2', 'call3']");
+    }
+
     function cursorPositionTests() {
         // Examples from README_cursorpositions.txt
         
@@ -735,7 +753,8 @@ ops.OdtDocumentTests = function OdtDocumentTests(runner) {
 
             emitSignals_AggregatedDuringOpExecution_MaintainsOrder,
             emitSignals_NewEmitDuringEndOp_EmitsImmediately,
-            emitSignals_WhenNotExecutingOp_EmitsImmediately
+            emitSignals_WhenNotExecutingOp_EmitsImmediately,
+            emitSignals_ExceptionsThrownDuringDelayedEmit_DontPreventFurtherSignals
         ]).concat(cursorPositionTests());
     };
     this.asyncTests = function () {
