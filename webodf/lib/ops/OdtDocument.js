@@ -131,12 +131,16 @@ ops.OdtDocument = function OdtDocument(odfCanvas) {
      * @param {!Element} documentElement
      */
     this.setDocumentElement = function (documentElement) {
-        var odfContainer = odfCanvas.odfContainer();
+        var odfContainer = odfCanvas.odfContainer(),
+            rootNode;
+
         // TODO Replace with a neater hack for reloading the Odt tree
-        // Once this is fixed, SelectionView.addOverlays & OdtStepsTranslator.verifyRootNode can be largely removed
+        // Once this is fixed, SelectionView.addOverlays can be removed
         odfContainer.setRootElement(documentElement);
         odfCanvas.setOdfContainer(odfContainer, true);
         odfCanvas.refreshCSS();
+        rootNode = getRootNode();
+        stepsTranslator = new ops.OdtStepsTranslator(rootNode, createPositionIterator(rootNode), filter, 500);
     };
 
     /**
@@ -1007,9 +1011,11 @@ ops.OdtDocument = function OdtDocument(odfCanvas) {
      * @return {undefined}
      */
     function init() {
+        var rootNode = getRootNode();
+
         filter = new ops.TextPositionFilter();
         stepUtils = new odf.StepUtils();
-        stepsTranslator = new ops.OdtStepsTranslator(getRootNode, createPositionIterator, filter, 500);
+        stepsTranslator = new ops.OdtStepsTranslator(rootNode, createPositionIterator(rootNode), filter, 500);
         eventNotifier.subscribe(ops.OdtDocument.signalOperationEnd, handleOperationExecuted);
         eventNotifier.subscribe(ops.OdtDocument.signalProcessingBatchEnd, core.Task.processTasks);
     }
