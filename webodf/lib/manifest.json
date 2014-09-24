@@ -3,10 +3,6 @@
     ],
     "core.Base64": [
     ],
-    "core.ByteArray": [
-    ],
-    "core.ByteArrayWriter": [
-    ],
     "core.CSSUnits": [
     ],
     "core.Cursor": [
@@ -40,8 +36,6 @@
     ],
     "core.PositionIterator": [
     ],
-    "core.RawInflate": [
-    ],
     "core.ScheduledTask": [
         "core.Destroyable"
     ],
@@ -58,13 +52,13 @@
     ],
     "core.Zip": [
         "core.Base64",
-        "core.ByteArray",
-        "core.ByteArrayWriter",
-        "core.RawInflate"
+        "externs.JSZip"
     ],
     "core.enums": [
     ],
     "core.typedefs": [
+    ],
+    "externs.JSZip": [
     ],
     "gui.AnnotationController": [
         "gui.CommonConstraints",
@@ -96,6 +90,9 @@
         "gui.VisualStepScanner"
     ],
     "gui.CommonConstraints": [
+    ],
+    "gui.DefaultStyles": [
+        "ops.OpAddListStyle"
     ],
     "gui.DirectFormattingController": [
         "core.LazyProperty",
@@ -153,12 +150,26 @@
         "core.typedefs",
         "gui.VisualStepScanner"
     ],
+    "gui.ListController": [
+        "core.LazyProperty",
+        "gui.CommonConstraints",
+        "gui.DefaultStyles",
+        "gui.ListStyleSummary",
+        "gui.SessionConstraints",
+        "gui.SessionContext"
+    ],
+    "gui.ListStyleSummary": [
+        "odf.Formatting"
+    ],
     "gui.MetadataController": [
         "ops.Session"
     ],
     "gui.MimeDataExporter": [
         "odf.OdfNodeFilter",
         "odf.TextSerializer"
+    ],
+    "gui.OdfFieldView": [
+        "odf.OdfCanvas"
     ],
     "gui.OdfTextBodyNodeFilter": [
         "odf.OdfUtils"
@@ -201,6 +212,7 @@
         "gui.ImageController",
         "gui.ImageSelector",
         "gui.InputMethodEditor",
+        "gui.ListController",
         "gui.MetadataController",
         "gui.PasteController",
         "gui.SelectionController",
@@ -401,6 +413,12 @@
     "ops.OpAddCursor": [
         "ops.OdtDocument"
     ],
+    "ops.OpAddList": [
+        "ops.OdtDocument"
+    ],
+    "ops.OpAddListStyle": [
+        "ops.OdtDocument"
+    ],
     "ops.OpAddMember": [
         "ops.OdtDocument"
     ],
@@ -442,6 +460,9 @@
     "ops.OpRemoveHyperlink": [
         "ops.OdtDocument"
     ],
+    "ops.OpRemoveList": [
+        "ops.OdtDocument"
+    ],
     "ops.OpRemoveMember": [
         "ops.OdtDocument"
     ],
@@ -476,6 +497,8 @@
     "ops.OperationFactory": [
         "ops.OpAddAnnotation",
         "ops.OpAddCursor",
+        "ops.OpAddList",
+        "ops.OpAddListStyle",
         "ops.OpAddMember",
         "ops.OpAddStyle",
         "ops.OpApplyDirectStyling",
@@ -489,6 +512,7 @@
         "ops.OpRemoveBlob",
         "ops.OpRemoveCursor",
         "ops.OpRemoveHyperlink",
+        "ops.OpRemoveList",
         "ops.OpRemoveMember",
         "ops.OpRemoveStyle",
         "ops.OpRemoveText",
@@ -503,12 +527,15 @@
         "ops.OperationFactory"
     ],
     "ops.OperationTransformMatrix": [
+        "ops.OpAddList",
+        "ops.OpAddListStyle",
         "ops.OpAddStyle",
         "ops.OpApplyDirectStyling",
         "ops.OpInsertText",
         "ops.OpMergeParagraph",
         "ops.OpMoveCursor",
         "ops.OpRemoveCursor",
+        "ops.OpRemoveList",
         "ops.OpRemoveStyle",
         "ops.OpRemoveText",
         "ops.OpSetParagraphStyle",

@@ -37,11 +37,12 @@ define([
     "BoldCurrentSelection",
     "AlignCurrentSelectionJustified",
     "MoveCursorToEnd",
-    "MoveCursorToStart"
+    "MoveCursorToStart",
+    "SaveDocument"
 ], function (Benchmark, HTMLResultsRenderer,
              OpenDocument, EnterEditMode, MoveCursorToEndDirect,InsertLetterA, RemovePositions, MoveCursorLeft,
              SelectEntireDocument, RemoveCurrentSelection, PreloadDocument, BoldCurrentSelection,
-             AlignCurrentSelectionJustified, MoveCursorToEnd, MoveCursorToStart) {
+             AlignCurrentSelectionJustified, MoveCursorToEnd, MoveCursorToStart, SaveDocument) {
     "use strict";
 
     /**
@@ -74,7 +75,7 @@ define([
             /** Test document to load. Relative or absolute urls are supported */
             fileUrl: params.fileUrl || "100pages.odt",
             /** Include known slow actions in the benchmark. These can take 10 or more minutes each on large docs */
-            includeSlow: params.includeSlow || false,
+            includeSlow: params.includeSlow === "false" ? false : true,
             /** Background colour of the benchmark results. Useful for distinguishing different benchmark versions */
             colour: params.colour
         };
@@ -116,7 +117,10 @@ define([
         benchmark.actions.push(new SelectEntireDocument());
         benchmark.actions.push(new BoldCurrentSelection());
         benchmark.actions.push(new AlignCurrentSelectionJustified());
-        benchmark.actions.push(new RemoveCurrentSelection());
+        benchmark.actions.push(new SaveDocument());
+        if (config.includeSlow) {
+            benchmark.actions.push(new RemoveCurrentSelection());
+        }
 
         this.start = benchmark.start;
     }

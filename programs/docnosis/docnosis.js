@@ -182,19 +182,19 @@ function UnpackJob() {
         }
         return str;
     }
-    function loadZipEntries(input, position, callback) {
+    function loadZipEntries(input, zip, position, callback) {
         if (position >= input.file.entries.length) {
             return callback();
         }
         var e = input.file.entries[position];
-        e.load(function (err, data) {
+        zip.load(e.filename, function (err, data) {
             if (err) {
                 input.errors.unpackErrors.push(err);
             }
             e.error = err;
             e.data = data;
             window.setTimeout(function () {
-                loadZipEntries(input, position + 1, callback);
+                loadZipEntries(input, zip, position + 1, callback);
             }, 0);
         });
     }
@@ -206,7 +206,7 @@ function UnpackJob() {
                 callback();
             } else {
                 input.file.entries = zip.getEntries();
-                loadZipEntries(input, 0, callback);
+                loadZipEntries(input, zip, 0, callback);
             }
         });
     }
@@ -694,17 +694,17 @@ function LoadingFile(file) {
         reader.readAsBinaryString(file);
     }
     this.file = file;
-    this.read = function (offset, length, callback) {
-        function read() {
+    this.readFile = function (callback) {
+        function readFile() {
             if (error) {
                 return callback(error);
             }
             if (data) {
-                return callback(error, data.subarray(offset, offset + length));
+                return callback(error, data);
             }
-            readRequests.push(read);
+            readRequests.push(readFile);
         }
-        read();
+        readFile();
     };
     this.load = load;
 }
@@ -783,12 +783,12 @@ function Docnosis(element) {
     }
 
     function enhanceRuntime() {
-        var read = runtime.read;
-        runtime.read = function (path, offset, length, callback) {
+        var readFile = runtime.readFile;
+        runtime.readFile = function (path, encoding, callback) {
             if (openedFiles.hasOwnProperty(path)) {
-                return openedFiles[path].read(offset, length, callback);
+                return openedFiles[path].readFile(callback);
             } else {
-                return read(path, offset, length, callback);
+                return readFile(path, encoding, callback);
             }
         };
     }

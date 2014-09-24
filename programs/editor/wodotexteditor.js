@@ -87,6 +87,11 @@ var Wodo = Wodo || (function () {
             a = document.createElement('a');
             a.href = scriptElementSrc;
             pathname = a.pathname;
+            if (pathname.charAt(0) !== "/") {
+                // Various versions of Internet Explorer seems to neglect the leading slash under some conditions
+                // (not when watching it with the dev tools of course!). This was confirmed in IE10 + IE11
+                pathname = "/" + pathname;
+            }
 
             pos = pathname.lastIndexOf("/");
             if (pos !== -1) {
@@ -283,6 +288,7 @@ var Wodo = Wodo || (function () {
             paragraphStyleEditingEnabled = isEnabled(editorOptions.paragraphStyleEditingEnabled),
             imageEditingEnabled = isEnabled(editorOptions.imageEditingEnabled),
             hyperlinkEditingEnabled = isEnabled(editorOptions.hyperlinkEditingEnabled),
+            listEditingEnabled = isEnabled(editorOptions.listEditingEnabled),
             reviewModeEnabled = Boolean(editorOptions.reviewModeEnabled), // needs to be explicitly enabled
             annotationsEnabled = reviewModeEnabled || isEnabled(editorOptions.annotationsEnabled),
             undoRedoEnabled = isEnabled(editorOptions.undoRedoEnabled),
@@ -326,6 +332,7 @@ var Wodo = Wodo || (function () {
                 paragraphStyleEditingEnabled: paragraphStyleEditingEnabled,
                 imageEditingEnabled: imageEditingEnabled,
                 hyperlinkEditingEnabled: hyperlinkEditingEnabled,
+                listEditingEnabled: listEditingEnabled,
                 annotationsEnabled: annotationsEnabled,
                 zoomingEnabled: zoomingEnabled,
                 reviewModeEnabled: reviewModeEnabled
@@ -656,6 +663,7 @@ var Wodo = Wodo || (function () {
                 paragraphStyleEditingEnabled: paragraphStyleEditingEnabled,
                 imageInsertingEnabled: imageEditingEnabled,
                 hyperlinkEditingEnabled: hyperlinkEditingEnabled,
+                listEditingEnabled: listEditingEnabled,
                 annotationsEnabled: annotationsEnabled,
                 undoRedoEnabled: undoRedoEnabled,
                 zoomingEnabled: zoomingEnabled,

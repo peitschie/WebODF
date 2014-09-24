@@ -89,7 +89,7 @@ ops.OpSplitParagraph = function OpSplitParagraph() {
             return false;
         }
 
-        if (odfUtils.isListItem(paragraphNode.parentNode)) {
+        if (odfUtils.isListItemOrListHeaderElement(paragraphNode.parentNode)) {
             targetNode = paragraphNode.parentNode;
         } else {
             targetNode = paragraphNode;
@@ -154,7 +154,7 @@ ops.OpSplitParagraph = function OpSplitParagraph() {
             splitChildNode = splitNode;
         }
 
-        if (odfUtils.isListItem(splitChildNode)) {
+        if (odfUtils.isListItemOrListHeaderElement(splitChildNode)) {
             splitChildNode = splitChildNode.childNodes.item(0);
         }
 
@@ -168,7 +168,7 @@ ops.OpSplitParagraph = function OpSplitParagraph() {
         if (domPosition.textNode.length === 0) {
             domPosition.textNode.parentNode.removeChild(domPosition.textNode);
         }
-        odtDocument.emit(ops.OdtDocument.signalStepsInserted, {position: position});
+        odtDocument.handleStepsInserted({position: position});
 
         if (cursor && moveCursor) {
             odtDocument.moveCursor(memberid, position + 1, 0);
