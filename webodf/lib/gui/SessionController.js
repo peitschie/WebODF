@@ -537,43 +537,45 @@ gui.SessionControllerOptions = function () {
                 }
             }
 
-            if (odfUtils.isImage(selection.focusNode) && selection.focusOffset === 0
-                && odfUtils.isCharacterFrame(selection.focusNode.parentNode)) {
-                // In FireFox if an image has no text around it, click on either side of the
-                // image resulting the same selection get returned. focusNode: image, focusOffset: 0
-                // Move the cursor to the next walkable position when clicking on the right side of an image
-                frameNode = /**@type{!Element}*/(selection.focusNode.parentNode);
-                rect = frameNode.getBoundingClientRect();
-                if (event.clientX > rect.left) {
-                    // On OSX, right-clicking on an image at the end of a range selection will hit
-                    // this particular branch. The image should remain selected if the right-click occurs on top
-                    // of it as technically it's the same behaviour as right clicking on an existing text selection.
-                    position = getNextWalkablePosition(frameNode);
-                    if (position) {
-                        selection.focusNode = position.container;
-                        selection.focusOffset = position.offset;
-                        if (isCollapsed) {
-                            // See above comment for the circumstances when the range might not be collapsed
-                            selection.anchorNode = selection.focusNode;
-                            selection.anchorOffset = selection.focusOffset;
+            if (selection.focusNode) {
+                if (odfUtils.isImage(selection.focusNode) && selection.focusOffset === 0
+                    && odfUtils.isCharacterFrame(selection.focusNode.parentNode)) {
+                    // In FireFox if an image has no text around it, click on either side of the
+                    // image resulting the same selection get returned. focusNode: image, focusOffset: 0
+                    // Move the cursor to the next walkable position when clicking on the right side of an image
+                    frameNode = /**@type{!Element}*/(selection.focusNode.parentNode);
+                    rect = frameNode.getBoundingClientRect();
+                    if (event.clientX > rect.left) {
+                        // On OSX, right-clicking on an image at the end of a range selection will hit
+                        // this particular branch. The image should remain selected if the right-click occurs on top
+                        // of it as technically it's the same behaviour as right clicking on an existing text selection.
+                        position = getNextWalkablePosition(frameNode);
+                        if (position) {
+                            selection.focusNode = position.container;
+                            selection.focusOffset = position.offset;
+                            if (isCollapsed) {
+                                // See above comment for the circumstances when the range might not be collapsed
+                                selection.anchorNode = selection.focusNode;
+                                selection.anchorOffset = selection.focusOffset;
+                            }
                         }
                     }
-                }
-            } else if (odfUtils.isImage(selection.focusNode.firstChild) && selection.focusOffset === 1
-                && odfUtils.isCharacterFrame(selection.focusNode)) {
-                // When click on the right side of an image that has no text elements, non-FireFox browsers
-                // will return focusNode: frame, focusOffset: 1 as the selection. Since this is not a valid cursor
-                // position, move the cursor to the next walkable position after the frame node.
+                } else if (odfUtils.isImage(selection.focusNode.firstChild) && selection.focusOffset === 1
+                    && odfUtils.isCharacterFrame(selection.focusNode)) {
+                    // When click on the right side of an image that has no text elements, non-FireFox browsers
+                    // will return focusNode: frame, focusOffset: 1 as the selection. Since this is not a valid cursor
+                    // position, move the cursor to the next walkable position after the frame node.
 
-                // To activate this branch (only applicable on OSX + Linux WebKit-derived browsers AFAIK):
-                // 1. With a paragraph containing some text followed by an inline image and no trailing text,
-                //    select from the start of paragraph to the end.
-                // 2. Now click once to the right hand side of the image. The cursor *should* jump to the right side
-                position = getNextWalkablePosition(selection.focusNode);
-                if (position) {
-                    // This should only ever be hit when the selection is intended to become collapsed
-                    selection.anchorNode = selection.focusNode = position.container;
-                    selection.anchorOffset = selection.focusOffset = position.offset;
+                    // To activate this branch (only applicable on OSX + Linux WebKit-derived browsers AFAIK):
+                    // 1. With a paragraph containing some text followed by an inline image and no trailing text,
+                    //    select from the start of paragraph to the end.
+                    // 2. Now click once to the right hand side of the image. The cursor *should* jump to the right side
+                    position = getNextWalkablePosition(selection.focusNode);
+                    if (position) {
+                        // This should only ever be hit when the selection is intended to become collapsed
+                        selection.anchorNode = selection.focusNode = position.container;
+                        selection.anchorOffset = selection.focusOffset = position.offset;
+                    }
                 }
             }
 
